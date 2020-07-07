@@ -22,12 +22,9 @@ router.put('/', async ctx => {
 });
 
 router.delete('/', async ctx => {
-	const tasks = ctx.query.tasks;
-	console.log(tasks);
-	/*
-	const msg = taskwarrior.update(tasks);
+	const tasks = ctx.query.tasks as string[];
+	const msg = taskwarrior.del(tasks.map(t => ({ uuid: t })));
 	console.log(msg);
-	*/
 	ctx.status = 200;
 });
 
