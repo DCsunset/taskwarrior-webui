@@ -41,6 +41,7 @@ export default {
   ** https://nuxtjs.org/guide/plugins
   */
 	plugins: [
+		'@/plugins/composition-api'
 	],
 	/*
   ** Auto import components
@@ -52,7 +53,8 @@ export default {
   */
 	buildModules: [
 		'@nuxt/typescript-build',
-		'@nuxtjs/vuetify'
+		'@nuxtjs/vuetify',
+		'nuxt-typed-vuex'
 	],
 	/*
   ** Nuxt.js modules
@@ -60,38 +62,40 @@ export default {
 	modules: [
 		// Doc: https://axios.nuxtjs.org/usage
 		'@nuxtjs/axios',
-		'@nuxtjs/pwa'
+		'@nuxtjs/pwa',
+		'@nuxtjs/proxy'
 	],
+
+	proxy: {
+		// Backend
+		'/api': {
+			target: 'http://localhost:3000/',
+			changeOrigin: true,
+			pathRewrite: {
+				'/api': ''
+			}
+		}
+	},
 	/*
   ** Axios module configuration
   ** See https://axios.nuxtjs.org/options
   */
-	axios: {},
+	axios: {
+		baseURL: '/'
+	},
 	/*
   ** vuetify module configuration
   ** https://github.com/nuxt-community/vuetify-module
   */
 	vuetify: {
-		customVariables: ['~/assets/variables.scss'],
-		theme: {
-			dark: true,
-			themes: {
-				dark: {
-					primary: colors.blue.darken2,
-					accent: colors.grey.darken3,
-					secondary: colors.amber.darken3,
-					info: colors.teal.lighten1,
-					warning: colors.amber.base,
-					error: colors.deepOrange.accent4,
-					success: colors.green.accent3
-				}
-			}
-		}
 	},
 	/*
   ** Build configuration
   ** See https://nuxtjs.org/api/configuration-build/
   */
 	build: {
+		transpile: [
+			/typed-vuex/
+		]
 	}
 };
