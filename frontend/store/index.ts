@@ -24,8 +24,8 @@ export const actions: ActionTree<RootState, RootState> = {
 		await this.$axios.$delete('/api/tasks', {
 			params: { tasks: tasks.map(task => task.uuid) }
 		});
-		const newTasks = context.state.tasks.filter(task => tasks.findIndex(t => t.uuid === task.uuid) === -1);
-		context.commit('setTasks', newTasks);
+		// Refresh
+		await context.dispatch('fetchTasks');
 	}
 };
 
