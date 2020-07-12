@@ -1,4 +1,4 @@
-import { ActionTree, MutationTree } from 'vuex';
+import { ActionTree, MutationTree, GetterTree } from 'vuex';
 import { Task } from 'taskwarrior-lib';
 import { getAccessorType } from 'typed-vuex';
 
@@ -7,6 +7,13 @@ export const state = () => ({
 });
 
 export type RootState = ReturnType<typeof state>;
+
+export const getters: GetterTree<RootState, RootState> = {
+	projects: state => state.tasks.map(task => task.project).filter(p => p !== undefined),
+	tags: state => state.tasks.reduce((tags: string[], task) => {
+		return task.tags ? tags.concat(task.tags) : tags;
+	}, [])
+};
 
 export const mutations: MutationTree<RootState> = {
 	setTasks(state, tasks: Task[]) {
