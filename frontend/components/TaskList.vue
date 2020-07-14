@@ -103,6 +103,31 @@
 				</v-row>
 			</template>
 
+			<template v-slot:item.description="{ item }">
+				<v-tooltip
+					top
+					v-if="item.mask"
+				>
+					<template v-slot:activator="{ on, attrs }">
+						<span
+							v-bind="attrs"
+							v-on="on"
+						>
+							<v-badge
+								inline
+								content="R"
+							>
+								{{ item.description }}
+							</v-badge>
+						</span>
+					</template>
+					<span>Recurring template</span>
+				</v-tooltip>
+				<template v-else>
+					{{ item.description }}
+				</template>
+			</template>
+
 			<template v-if="status === 'waiting'" v-slot:item.wait="{ item }">
 				{{ displayDate(item.wait) }}
 			</template>
@@ -203,6 +228,9 @@ export default defineComponent({
 			{ text: 'Project', value: 'project' },
 			{ text: 'Description', value: 'description' },
 			{ text: 'Priority', value: 'priority' },
+			...(status.value === 'recurring'
+				? [{ text: 'Recur', value: 'recur' }]
+				: []),
 			...(status.value !== 'waiting'
 				? [{ text: 'Due', value: 'due' }]
 				: [{ text: 'Wait', value: 'wait' }]),
