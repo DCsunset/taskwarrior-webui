@@ -1,5 +1,24 @@
 <template>
 	<v-app>
+		<v-snackbar
+			v-model="snackbar"
+			:color="notification.color"
+			:timeout="4000"
+		>
+			{{ notification.text }}
+
+			<template v-slot:action="{ attrs }">
+				<v-btn
+					dark
+					text
+					v-bind="attrs"
+					@click="snackbar = false"
+				>
+					Close
+				</v-btn>
+			</template>
+		</v-snackbar>
+
 		<v-app-bar height="54px" fixed app>
 			<v-toolbar-title>
 				Taskwarrior WebUI
@@ -19,7 +38,7 @@
 </template>
 
 <script lang="ts">
-import { defineComponent, computed } from '@vue/composition-api';
+import { defineComponent, computed, onErrorCaptured } from '@vue/composition-api';
 
 export default defineComponent({
 	setup(_props, context) {
@@ -29,8 +48,38 @@ export default defineComponent({
 				context.root.$vuetify.theme.dark = val;
 			}
 		});
+
+		const notification = computed(() => context.root.$store.state.notification);
+		const snackbar = computed({
+			get: () => context.root.$store.state.snackbar,
+			set: val => context.root.$store.commit('setSnackbar', val)
+		});
+
+		onErrorCaptured((err: any) => {
+			// axios error
+			let notification: any;
+			if (err?.response) {
+				const { status, data } = err.response!;
+				notification = {
+					color: 'error',
+					text: `Error ${status}: ${data}`
+				};
+			}
+			else {
+				const { name, message } = err as Error;
+				notification = {
+					color: 'error',
+					text: `Error ${name}: ${message}`
+				};
+			}
+			context.root.$store.commit('setNotification', notification);
+			return false;
+		});
+
 		return {
-			dark
+			dark,
+			snackbar,
+			notification
 		};
 	}
 });

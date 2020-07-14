@@ -17,6 +17,7 @@
     "@nuxtjs/pwa": "^3.0.0-beta.20",
     "@vue/composition-api": "^1.0.0-beta.1",
     "lodash": "^4.17.15",
+    "moment": "^2.27.0",
     "nuxt": "^2.13.0",
     "nuxt-typed-vuex": "^0.1.19"
   },

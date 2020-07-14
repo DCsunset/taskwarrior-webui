@@ -2,7 +2,7 @@
 	<div>
 		<TaskDialog v-model="showTaskDialog" :task="currentTask" />
 
-		<v-btn-toggle v-model="status" mandatory>
+		<v-btn-toggle v-model="status" mandatory background-color="rgba(0, 0, 0, 0)">
 			<v-row class="pa-3">
 				<v-btn
 					v-for="st in allStatus"
@@ -20,9 +20,9 @@
 					</v-icon>
 					{{ st }}
 					<v-badge
-						v-if="st === 'pending'"
+						v-if="st === 'pending' && classifiedTasks[st].length"
 						:content="classifiedTasks[st].length"
-						:color="st === status ? 'primary' : 'grey darken-1'"
+						:color="st === status ? 'primary' : 'grey'"
 						inline
 					/>
 				</v-btn>
@@ -33,6 +33,7 @@
 			:items="classifiedTasks[status]"
 			:headers="headers"
 			show-select
+			item-key="uuid"
 			v-model="selected"
 			class="elevation-1"
 		>
@@ -47,8 +48,21 @@
 							small
 							dark
 							title="Done"
+							@click="completeTasks(selected)"
 						>
 							<v-icon>mdi-check</v-icon>
+						</v-btn>
+						<v-btn
+							v-show="status === 'completed' || status === 'deleted'"
+							class="ma-1"
+							color="primary"
+							fab
+							dark
+							small
+							title="Restore"
+							@click="restoreTasks(selected)"
+						>
+							<v-icon>mdi-restore</v-icon>
 						</v-btn>
 						<v-btn
 							v-show="status !== 'deleted'"
@@ -89,17 +103,59 @@
 				</v-row>
 			</template>
 
+			<template v-if="status === 'waiting'" v-slot:item.wait="{ item }">
+				{{ displayDate(item.wait) }}
+			</template>
+			<template v-slot:item.due="{ item }">
+				{{ displayDate(item.due) }}
+			</template>
+			<template v-slot:item.until="{ item }">
+				{{ displayDate(item.until) }}
+			</template>
+
+			<template v-slot:item.tags="{ item }">
+				<v-chip
+					v-for="tag in item.tags"
+					:key="tag"
+					small
+				>
+					{{ tag }}
+				</v-chip>
+			</template>
+
 			<template v-slot:item.actions="{ item }">
 				<v-icon
-					small
-					class="mr-2"
+					v-show="status === 'pending'"
+					size="20px"
+					class="ml-2"
+					@click="completeTasks([item])"
+					title="Done"
+				>
+					mdi-check
+				</v-icon>
+				<v-icon
+					v-show="status === 'completed' || status === 'deleted'"
+					size="20px"
+					class="ml-2"
+					@click="restoreTasks([item])"
+					title="Restore"
+				>
+					mdi-restore
+				</v-icon>
+				<v-icon
+					class="ml-2"
+					size="20px"
 					@click="editTask(item)"
+					title="Edit"
 				>
 					mdi-pencil
 				</v-icon>
 				<v-icon
-					small
+					v-show="status !== 'deleted'"
+					class="ml-2"
+					size="20px"
 					@click="deleteTasks([item])"
+					title="Delete"
 				>
 					mdi-delete
 				</v-icon>
@@ -113,6 +169,11 @@ import { defineComponent, computed, reactive, ref, ComputedRef, Ref } from '@vue
 import { Task } from 'taskwarrior-lib';
 import _ from 'lodash';
 import TaskDialog from '../components/TaskDialog.vue';
+import moment from 'moment';
+
+function displayDate(str?: string) {
+	return str && moment(str).format('YYYY-MM-DD');
+}
 
 interface Props {
 	[key: string]: unknown,
@@ -127,15 +188,6 @@ export default defineComponent({
 	},
 
 	setup(props: Props, context) {
-		const headers = [
-			{ text: 'Project', value: 'project' },
-			{ text: 'Description', value: 'description' },
-			{ text: 'Priority', value: 'priority' },
-			{ text: 'Due', value: 'due' },
-			{ text: 'Tags', value: 'tags' },
-			{ text: 'Actions', value: 'actions', sortable: false }
-		];
-
 		const selected = ref([] as Task[]);
 
 		const status = ref('pending');
@@ -147,31 +199,76 @@ export default defineComponent({
 			deleted: 'mdi-delete',
 			recurring: 'mdi-restart'
 		};
+		const headers = computed(() => [
+			{ text: 'Project', value: 'project' },
+			{ text: 'Description', value: 'description' },
+			{ text: 'Priority', value: 'priority' },
+			...(status.value !== 'waiting'
+				? [{ text: 'Due', value: 'due' }]
+				: [{ text: 'Wait', value: 'wait' }]),
+			{ text: 'Until', value: 'until' },
+			{ text: 'Tags', value: 'tags' },
+			{ text: 'Actions', value: 'actions', sortable: false }
+		]);
 
 		const tempTasks: { [key: string]: ComputedRef<Task[]> } = {};
 		for (const status of allStatus) {
 			tempTasks[status] = computed((): Task[] => props.tasks?.filter(task => task.status === status));
 		}
 		const classifiedTasks = reactive(tempTasks);
+		console.log(tempTasks);
 
 		const refresh = () => {
 			context.root.$store.dispatch('fetchTasks');
 		};
 
 		const showTaskDialog = ref(false);
-		const currentTask: Ref<Task> = ref(null);
+		const currentTask: Ref<Task | null> = ref(null);
 		const newTask = () => {
 			showTaskDialog.value = true;
 			currentTask.value = null;
 		};
 
-		const editTask = (_task: Task) => {
-			// TODO
+		const editTask = (task: Task) => {
+			showTaskDialog.value = true;
+			currentTask.value = _.cloneDeep(task);
 		};
 
 		const deleteTasks = async (tasks: Task[]) => {
 			await context.root.$store.dispatch('deleteTasks', tasks);
-			_.remove(selected.value, task => tasks.findIndex(t => t.uuid === task.uuid) !== -1);
+			selected.value = selected.value.filter(task => tasks.findIndex(t => t.uuid === task.uuid) === -1);
+			context.root.$store.commit('setNotification', {
+				color: 'success',
+				text: 'Successfully delete the task(s)'
+			});
+		};
+
+		const completeTasks = async (tasks: Task[]) => {
+			await context.root.$store.dispatch('updateTasks', tasks.map(task => {
+				return {
+					...task,
+					status: 'completed'
+				};
+			}));
+			selected.value = selected.value.filter(task => tasks.findIndex(t => t.uuid === task.uuid) === -1);
+			context.root.$store.commit('setNotification', {
+				color: 'success',
+				text: 'Successfully complete the task(s)'
+			});
+		};
+
+		const restoreTasks = async (tasks: Task[]) => {
+			await context.root.$store.dispatch('updateTasks', tasks.map(task => {
+				return {
+					...task,
+					status: 'pending'
+				};
+			}));
+			selected.value = selected.value.filter(task => tasks.findIndex(t => t.uuid === task.uuid) === -1);
+			context.root.$store.commit('setNotification', {
+				color: 'success',
+				text: 'Successfully restore the task(s)'
+			});
 		};
 
 		return {
@@ -186,8 +283,11 @@ export default defineComponent({
 			currentTask,
 			editTask,
 			deleteTasks,
+			completeTasks,
+			restoreTasks,
 			showTaskDialog,
-			TaskDialog
+			TaskDialog,
+			displayDate
 		};
 	}
 });
