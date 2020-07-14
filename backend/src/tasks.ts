@@ -9,14 +9,9 @@ router.get('/', async ctx => {
 	ctx.body = tasks;
 });
 
-router.post('/', async ctx => {
-	const msg = taskwarrior.update(ctx.body);
-	console.log(msg);
-	ctx.status = 200;
-});
-
 router.put('/', async ctx => {
-	const msg = taskwarrior.update(ctx.body);
+	console.log(ctx.request.body.tasks);
+	const msg = taskwarrior.update(ctx.request.body.tasks);
 	console.log(msg);
 	ctx.status = 200;
 });

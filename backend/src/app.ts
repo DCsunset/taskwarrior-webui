@@ -5,12 +5,26 @@ import * as logger from 'koa-logger';
 import * as qs from 'koa-qs';
 
 import tasksRouter from './tasks';
+import { TaskError } from 'taskwarrior-lib';
 
 const app = new Koa();
 
 qs(app);
 app.use(bodyParser());
 app.use(logger());
+
+app.use(async (ctx, next) => {
+	try {
+		await next();
+	}
+	catch (err) {
+		if (err instanceof TaskError) {
+			(err as any).expose = true;
+			(err as any).status = 400;
+		}
+		throw err;
+	}
+});
 
 const router = new Router();
 router.use('/tasks', tasksRouter.routes());
