@@ -189,7 +189,14 @@ import TaskDialog from '../components/TaskDialog.vue';
 import moment from 'moment';
 
 function displayDate(str?: string) {
-	return str && moment(str).format('YYYY-MM-DD');
+	if (!str)
+		return str;
+
+	const date = moment(str);
+	const diff = moment.duration(date.diff(moment()));
+	if (Math.abs(diff.asDays()) < 1)
+		return diff.humanize(true);
+	return date.format('YYYY-MM-DD');
 }
 
 interface Props {
