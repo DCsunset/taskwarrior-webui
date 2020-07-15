@@ -35,10 +35,27 @@
 <script lang="ts">
 import { defineComponent, ref, computed, watch, ComputedRef } from '@vue/composition-api';
 import TaskList from '../components/TaskList.vue';
+import { Task } from 'taskwarrior-lib';
 
 export default defineComponent({
 	setup(_props, context) {
 		context.root.$store.dispatch('fetchTasks');
+
+		let interval: NodeJS.Timeout | null = null;
+		const setAutoRefresh = () => {
+			console.log('Setting inverval');
+			if (interval)
+				clearInterval(interval);
+			const freq = +context.root.$store.state.settings.autoRefresh;
+			if (freq > 0) {
+				interval = setInterval(() => {
+					console.log('Refreshing...');
+					context.root.$store.dispatch('fetchTasks');
+				}, +context.root.$store.state.settings.autoRefresh * 60000);
+			}
+		};
+		setAutoRefresh();
+		watch(() => context.root.$store.state.settings, setAutoRefresh);
 
 		const mode = ref('Tasks');
 		const allModes = ['Tasks', 'Projects'];
@@ -60,7 +77,7 @@ export default defineComponent({
 
 			if (project.value)
 				return context.root.$store.state.tasks.filter(
-					task => task.project === project.value
+					(task: Task) => task.project === project.value
 				);
 
 			return [];

@@ -1,5 +1,7 @@
 <template>
 	<v-app>
+		<SettingsDialog v-model="settingsDialog" />
+
 		<v-snackbar
 			v-model="snackbar"
 			:color="notification.color"
@@ -24,8 +26,16 @@
 				Taskwarrior WebUI
 			</v-toolbar-title>
 			<v-spacer />
-			<v-icon class="mr-2" size="28px" @click="dark = !dark">
+			<v-icon class="mr-4" size="28px" @click="dark = !dark" title="Theme">
 				{{ dark ? 'mdi-brightness-4' : 'mdi-brightness-7' }}
+			</v-icon>
+			<v-icon
+				class="mr-2"
+				size="28px"
+				title="Settings"
+				@click="settingsDialog = true"
+			>
+				mdi-cog
 			</v-icon>
 		</v-app-bar>
 
@@ -38,16 +48,23 @@
 </template>
 
 <script lang="ts">
-import { defineComponent, computed, onErrorCaptured } from '@vue/composition-api';
+import { defineComponent, computed, onErrorCaptured, ref } from '@vue/composition-api';
+import SettingsDialog from '../components/SettingsDialog.vue';
 
 export default defineComponent({
 	setup(_props, context) {
+		context.root.$store.dispatch('fetchSettings');
+
+		context.root.$vuetify.theme.dark = context.root.$store.state.settings.dark;
+
 		const dark = computed({
 			get: () => context.root.$vuetify.theme.dark,
 			set: val => {
 				context.root.$vuetify.theme.dark = val;
 			}
 		});
+
+		const settingsDialog = ref(false);
 
 		const notification = computed(() => context.root.$store.state.notification);
 		const snackbar = computed({
@@ -79,7 +96,10 @@ export default defineComponent({
 		return {
 			dark,
 			snackbar,
-			notification
+			notification,
+			settingsDialog,
+
+			SettingsDialog
 		};
 	}
 });

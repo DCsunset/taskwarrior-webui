@@ -8,6 +8,10 @@ export const state = () => ({
 	notification: {
 		color: '',
 		text: ''
+	},
+	settings: {
+		dark: false,
+		autoRefresh: '5' // in minutes
 	}
 });
 
@@ -21,6 +25,10 @@ export const getters: GetterTree<RootState, RootState> = {
 };
 
 export const mutations: MutationTree<RootState> = {
+	setSettings(state, settings) {
+		state.settings = settings;
+	},
+
 	setTasks(state, tasks: Task[]) {
 		state.tasks = tasks;
 	},
@@ -37,6 +45,18 @@ export const mutations: MutationTree<RootState> = {
 };
 
 export const actions: ActionTree<RootState, RootState> = {
+	fetchSettings(context) {
+		const settings = localStorage.getItem('settings');
+		if (settings) {
+			context.commit('setSettings', JSON.parse(settings));
+		}
+	},
+
+	updateSettings(context, settings) {
+		context.commit('setSettings', settings);
+		localStorage.setItem('settings', JSON.stringify(settings));
+	},
+
 	async fetchTasks(context) {
 		const tasks: Task[] = await this.$axios.$get('/api/tasks');
 		context.commit('setTasks', tasks);
