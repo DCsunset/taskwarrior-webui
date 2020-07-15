@@ -1,5 +1,11 @@
 <template>
 	<div>
+		<ConfirmationDialog
+			v-model="showConfirmationDialog"
+			:title="confirmation.title"
+			:text="confirmation.text"
+			@yes="confirmation.handler"
+		/>
 		<TaskDialog v-model="showTaskDialog" :task="currentTask" />
 
 		<v-btn-toggle v-model="status" mandatory background-color="rgba(0, 0, 0, 0)">
@@ -186,6 +192,7 @@ import { defineComponent, computed, reactive, ref, ComputedRef, Ref } from '@vue
 import { Task } from 'taskwarrior-lib';
 import _ from 'lodash';
 import TaskDialog from '../components/TaskDialog.vue';
+import ConfirmationDialog from '../components/ConfirmationDialog.vue';
 import moment from 'moment';
 
 function displayDate(str?: string) {
@@ -246,11 +253,17 @@ export default defineComponent({
 			tempTasks[status] = computed((): Task[] => props.tasks?.filter(task => task.status === status));
 		}
 		const classifiedTasks = reactive(tempTasks);
-		console.log(tempTasks);
 
 		const refresh = () => {
 			context.root.$store.dispatch('fetchTasks');
 		};
+
+		const showConfirmationDialog = ref(false);
+		const confirmation = reactive({
+			title: 'Confirm',
+			text: '',
+			handler: () => {}
+		});
 
 		const showTaskDialog = ref(false);
 		const currentTask: Ref<Task | null> = ref(null);
@@ -262,15 +275,6 @@ export default defineComponent({
 		const editTask = (task: Task) => {
 			showTaskDialog.value = true;
 			currentTask.value = _.cloneDeep(task);
-		};
-
-		const deleteTasks = async (tasks: Task[]) => {
-			await context.root.$store.dispatch('deleteTasks', tasks);
-			selected.value = selected.value.filter(task => tasks.findIndex(t => t.uuid === task.uuid) === -1);
-			context.root.$store.commit('setNotification', {
-				color: 'success',
-				text: 'Successfully delete the task(s)'
-			});
 		};
 
 		const completeTasks = async (tasks: Task[]) => {
@@ -287,18 +291,35 @@ export default defineComponent({
 			});
 		};
 
-		const restoreTasks = async (tasks: Task[]) => {
-			await context.root.$store.dispatch('updateTasks', tasks.map(task => {
-				return {
-					...task,
-					status: 'pending'
-				};
-			}));
-			selected.value = selected.value.filter(task => tasks.findIndex(t => t.uuid === task.uuid) === -1);
-			context.root.$store.commit('setNotification', {
-				color: 'success',
-				text: 'Successfully restore the task(s)'
-			});
+		const deleteTasks = (tasks: Task[]) => {
+			confirmation.text = 'Are you sure to delete the task(s)?';
+			confirmation.handler = async () => {
+				await context.root.$store.dispatch('deleteTasks', tasks);
+				selected.value = selected.value.filter(task => tasks.findIndex(t => t.uuid === task.uuid) === -1);
+				context.root.$store.commit('setNotification', {
+					color: 'success',
+					text: 'Successfully delete the task(s)'
+				});
+			};
+			showConfirmationDialog.value = true;
+		};
+
+		const restoreTasks = (tasks: Task[]) => {
+			confirmation.text = 'Are you sure to restore the task(s)?';
+			confirmation.handler = async () => {
+				await context.root.$store.dispatch('updateTasks', tasks.map(task => {
+					return {
+						...task,
+						status: 'pending'
+					};
+				}));
+				selected.value = selected.value.filter(task => tasks.findIndex(t => t.uuid === task.uuid) === -1);
+				context.root.$store.commit('setNotification', {
+					color: 'success',
+					text: 'Successfully restore the task(s)'
+				});
+			};
+			showConfirmationDialog.value = true;
 		};
 
 		return {
@@ -316,8 +337,12 @@ export default defineComponent({
 			completeTasks,
 			restoreTasks,
 			showTaskDialog,
+			showConfirmationDialog,
+			confirmation,
+			displayDate,
+
 			TaskDialog,
-			displayDate
+			ConfirmationDialog
 		};
 	}
 });
