@@ -103,7 +103,7 @@
 				</v-row>
 			</template>
 
-			<template v-slot:item.description="{ item }">
+			<template v-slot:item.type="{ item }">
 				<v-tooltip
 					top
 					v-if="item.mask"
@@ -113,19 +113,11 @@
 							v-bind="attrs"
 							v-on="on"
 						>
-							<v-badge
-								inline
-								content="R"
-							>
-								{{ item.description }}
-							</v-badge>
+							<v-badge style="margin-bottom: 1px" inline content="R" />
 						</span>
 					</template>
 					<span>Recurring template</span>
 				</v-tooltip>
-				<template v-else>
-					{{ item.description }}
-				</template>
 			</template>
 
 			<template v-if="status === 'waiting'" v-slot:item.wait="{ item }">
@@ -225,6 +217,9 @@ export default defineComponent({
 			recurring: 'mdi-restart'
 		};
 		const headers = computed(() => [
+			...(status.value === 'deleted'
+				? [{ text: 'Type', value: 'type', width: '1px', sortable: false }]
+				: []),
 			{ text: 'Project', value: 'project' },
 			{ text: 'Description', value: 'description' },
 			{ text: 'Priority', value: 'priority' },
