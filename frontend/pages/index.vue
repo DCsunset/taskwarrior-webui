@@ -43,13 +43,11 @@ export default defineComponent({
 
 		let interval: NodeJS.Timeout | null = null;
 		const setAutoRefresh = () => {
-			console.log('Setting inverval');
 			if (interval)
 				clearInterval(interval);
 			const freq = +context.root.$store.state.settings.autoRefresh;
 			if (freq > 0) {
 				interval = setInterval(() => {
-					console.log('Refreshing...');
 					context.root.$store.dispatch('fetchTasks');
 				}, +context.root.$store.state.settings.autoRefresh * 60000);
 			}

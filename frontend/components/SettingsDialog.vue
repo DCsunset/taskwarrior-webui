@@ -45,7 +45,7 @@
 			</v-card-text>
 			<v-card-actions>
 				<v-spacer />
-				<v-btn @click="closeDialog">
+				<v-btn text @click="closeDialog">
 					Cancel
 				</v-btn>
 				<v-btn @click="reset">

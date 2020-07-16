@@ -40,6 +40,7 @@
 			:headers="headers"
 			show-select
 			item-key="uuid"
+			:item-class="rowClass"
 			v-model="selected"
 			class="elevation-1"
 		>
@@ -107,23 +108,6 @@
 						</v-btn>
 					</div>
 				</v-row>
-			</template>
-
-			<template v-slot:item.type="{ item }">
-				<v-tooltip
-					top
-					v-if="item.mask"
-				>
-					<template v-slot:activator="{ on, attrs }">
-						<span
-							v-bind="attrs"
-							v-on="on"
-						>
-							<v-badge style="margin-bottom: 1px" inline content="R" />
-						</span>
-					</template>
-					<span>Recurring template</span>
-				</v-tooltip>
 			</template>
 
 			<template v-if="status === 'waiting'" v-slot:item.wait="{ item }">
@@ -206,6 +190,27 @@ function displayDate(str?: string) {
 	return date.format('YYYY-MM-DD');
 }
 
+function urgentDate(str?: string) {
+	if (!str)
+		return false;
+
+	const date = moment(str);
+	const diff = moment.duration(date.diff(moment()));
+	const days = diff.asDays();
+	if (days > 0 && days < 1)
+		return true;
+
+	return false;
+}
+
+function expiredDate(str?: string) {
+	if (!str)
+		return false;
+
+	const date = moment(str);
+	return date.isBefore(moment());
+}
+
 interface Props {
 	[key: string]: unknown,
 	tasks: Task[]
@@ -231,9 +236,6 @@ export default defineComponent({
 			recurring: 'mdi-restart'
 		};
 		const headers = computed(() => [
-			...(status.value === 'deleted'
-				? [{ text: 'Type', value: 'type', width: '1px', sortable: false }]
-				: []),
 			{ text: 'Project', value: 'project' },
 			{ text: 'Description', value: 'description' },
 			{ text: 'Priority', value: 'priority' },
@@ -322,6 +324,16 @@ export default defineComponent({
 			showConfirmationDialog.value = true;
 		};
 
+		const rowClass = (item: Task) => {
+			if (item.mask)
+				return 'recur-task';
+			else if (status.value !== 'completed' && urgentDate(item.due))
+				return 'urgent-task';
+			else if (status.value !== 'completed' && expiredDate(item.due))
+				return 'expired-task';
+			return undefined;
+		};
+
 		return {
 			refresh,
 			headers,
@@ -340,6 +352,7 @@ export default defineComponent({
 			showConfirmationDialog,
 			confirmation,
 			displayDate,
+			rowClass,
 
 			TaskDialog,
 			ConfirmationDialog
@@ -347,3 +360,17 @@ export default defineComponent({
 	}
 });
 </script>
+
+<style>
+.v-application tr.recur-task {
+  background-color: #2196F333;
+}
+
+.v-application tr.urgent-task {
+  background-color: #F4433633;
+}
+
+.v-application tr.expired-task {
+  background-color: #79554844;
+}
+</style>
