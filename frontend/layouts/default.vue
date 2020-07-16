@@ -22,6 +22,9 @@
 		</v-snackbar>
 
 		<v-app-bar height="54px" fixed app>
+			<v-icon class="mr-2" color="blue">
+				mdi-sticker-check-outline
+			</v-icon>
 			<v-toolbar-title>
 				Taskwarrior WebUI
 			</v-toolbar-title>
