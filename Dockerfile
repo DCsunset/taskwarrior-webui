@@ -3,7 +3,7 @@ FROM alpine:latest
 ENV NODE_ENV production
 
 # Debug
-RUN sed -i 's/dl-cdn.alpinelinux.org/mirrors.tuna.tsinghua.edu.cn/g' /etc/apk/repositories
+# RUN sed -i 's/dl-cdn.alpinelinux.org/mirrors.tuna.tsinghua.edu.cn/g' /etc/apk/repositories
 
 RUN apk --no-cache add nodejs npm nginx task
 
@@ -13,7 +13,7 @@ COPY ./nginx/nginx.conf /etc/nginx/conf.d/default.conf
 COPY ./docker/start.sh /start.sh
 
 # Debug
-RUN npm config set registry https://registry.npm.taobao.org
+# RUN npm config set registry https://registry.npm.taobao.org
 
 # Frontend
 RUN cd /src/frontend && npm install \
