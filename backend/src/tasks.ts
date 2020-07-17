@@ -10,7 +10,6 @@ router.get('/', async ctx => {
 });
 
 router.put('/', async ctx => {
-	console.log(ctx.request.body.tasks);
 	const msg = taskwarrior.update(ctx.request.body.tasks);
 	console.log(msg);
 	ctx.status = 200;

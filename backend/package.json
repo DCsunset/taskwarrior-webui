@@ -4,7 +4,9 @@
   "description": "",
   "main": "index.js",
   "scripts": {
-    "dev": "ts-node src/app.ts"
+    "dev": "ts-node src/app.ts",
+    "build": "rm -rf dist && tsc",
+    "start": "node ./dist/app.js"
   },
   "author": "DCsunset",
   "license": "GPL-3.0-or-later",
