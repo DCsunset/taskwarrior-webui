@@ -1,7 +1,5 @@
 FROM alpine:latest
 
-ENV NODE_ENV production
-
 # Debug
 # RUN sed -i 's/dl-cdn.alpinelinux.org/mirrors.tuna.tsinghua.edu.cn/g' /etc/apk/repositories
 
@@ -24,6 +22,7 @@ RUN cd /src/frontend && npm install \
 # Backend
 RUN cd /src/backend && npm install \
 	&& npm run build \
+	&& npm prune --production \
 	&& rm -r /src/backend/src
 
 EXPOSE 80
