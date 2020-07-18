@@ -1,6 +1,8 @@
 # Taskwarrior-webui
 
 [![Docker Cloud Build Status](https://img.shields.io/docker/cloud/build/dcsunset/taskwarrior-webui)](https://hub.docker.com/r/dcsunset/taskwarrior-webui)
+[![Docker Image Size](https://badgen.net/docker/size/dcsunset/taskwarrior-webui)](https://hub.docker.com/r/dcsunset/taskwarrior-webui)
+
 
 Responsive Web UI for Taskwarrior based on Vue.js and Koa.js.
 
@@ -26,7 +28,9 @@ docker pull dcsunset/taskwarrior-webui
 Then run it with the command:
 
 ```
-docker run -d -p 8080:80 -v $HOME/.taskrc:/.taskrc -v $HOME/.task:/.task dcsunset/taskwarrior-webui
+docker run -d -p 8080:80 --name taskwarrior-webui \
+	-v $HOME/.taskrc:/.taskrc -v $HOME/.task:/.task \
+	dcsunset/taskwarrior-webui
 ```
 
 ### Manually deploy
