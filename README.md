@@ -1,5 +1,7 @@
 # Taskwarrior-webui
 
+[![Docker Cloud Build Status](https://img.shields.io/docker/cloud/build/dcsunset/taskwarrior-webui)](https://hub.docker.com/r/dcsunset/taskwarrior-webui)
+
 Responsive Web UI for Taskwarrior based on Vue.js and Koa.js.
 
 ## Features
