@@ -33,6 +33,10 @@ export default {
   ** Global CSS
   */
 	css: [
+		// mdi font
+		'@mdi/font/css/materialdesignicons.css',
+		// main font
+		'typeface-open-sans/index.css'
 	],
 	/*
   ** Plugins to load before mounting the App
@@ -95,6 +99,9 @@ export default {
   ** https://github.com/nuxt-community/vuetify-module
   */
 	vuetify: {
+		defaultAssets: false,
+		customVariables: ['~/assets/variables.scss'],
+		treeShake: true // to make customVariables work in dev
 	},
 	/*
   ** Build configuration

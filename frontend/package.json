@@ -11,6 +11,7 @@
     "lint": "eslint --fix --ext .ts,.js,.vue ."
   },
   "dependencies": {
+    "@mdi/font": "^5.3.45",
     "@nuxt/typescript-runtime": "^0.4.10",
     "@nuxtjs/axios": "^5.11.0",
     "@nuxtjs/proxy": "^2.0.0",
@@ -19,7 +20,8 @@
     "lodash": "^4.17.19",
     "moment": "^2.27.0",
     "nuxt": "^2.13.0",
-    "nuxt-typed-vuex": "^0.1.19"
+    "nuxt-typed-vuex": "^0.1.19",
+    "typeface-open-sans": "0.0.75"
   },
   "devDependencies": {
     "@nuxt/typescript-build": "^1.0.3",
