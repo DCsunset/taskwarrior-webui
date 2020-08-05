@@ -15,6 +15,16 @@
 					style="max-width: 120px"
 					hide-details
 				/>
+				<div class="ml-6 d-flex align-center">
+					<v-progress-circular
+						:size="54"
+						:width="5"
+						:value="progress"
+						color="primary"
+					>
+						{{ progress }}%
+					</v-progress-circular>
+				</div>
 			</template>
 
 			<v-spacer />
@@ -69,7 +79,7 @@ export default defineComponent({
 				project.value = '';
 		});
 
-		const tasks = computed(() => {
+		const tasks: ComputedRef<Task[]> = computed(() => {
 			if (mode.value === 'Tasks')
 				return context.root.$store.state.tasks;
 
@@ -81,13 +91,25 @@ export default defineComponent({
 			return [];
 		});
 
+		const progress = computed(() => {
+			if (mode.value === 'Projects' && project.value) {
+				const completed = tasks.value.reduce((acc: number, task) => task.status === 'completed' ? acc + 1 : acc, 0);
+				const pending = tasks.value.reduce((acc: number, task) => task.status === 'pending' ? acc + 1 : acc, 0);
+				return completed + pending === 0
+					? 100
+					: Math.ceil(100 * completed / (completed + pending));
+			}
+			return 0;
+		});
+
 		return {
 			mode,
 			allModes,
 			TaskList,
 			tasks,
 			projects,
-			project
+			project,
+			progress
 		};
 	}
 });
