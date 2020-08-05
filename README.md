@@ -3,8 +3,13 @@
 [![Docker Cloud Build Status](https://img.shields.io/docker/cloud/build/dcsunset/taskwarrior-webui)](https://hub.docker.com/r/dcsunset/taskwarrior-webui)
 [![Docker Image Size](https://badgen.net/docker/size/dcsunset/taskwarrior-webui)](https://hub.docker.com/r/dcsunset/taskwarrior-webui)
 
-
 Responsive Web UI for Taskwarrior based on Vue.js and Koa.js.
+
+## Screenshots
+
+![Screenshot 1](./screenshots/Screenshot1.png)
+
+![Screenshot 2](./screenshots/Screenshot2.png)
 
 ## Features
 
@@ -13,6 +18,7 @@ Responsive Web UI for Taskwarrior based on Vue.js and Koa.js.
 * PWA support
 * Easy to deploy (using Docker)
 * Support multiple types of tasks
+* Support light and dark modes
 
 
 ## Deployment
