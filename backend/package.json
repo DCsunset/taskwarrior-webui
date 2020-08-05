@@ -16,7 +16,7 @@
     "koa-bodyparser": "^4.3.0",
     "koa-logger": "^3.2.1",
     "koa-qs": "^3.0.0",
-    "taskwarrior-lib": "^0.4.0"
+    "taskwarrior-lib": "^0.4.2"
   },
   "devDependencies": {
     "@types/koa": "^2.11.3",
