@@ -1,5 +1,5 @@
 <template>
-	<v-app>
+	<v-app class="task-app">
 		<SettingsDialog v-model="settingsDialog" />
 
 		<v-snackbar

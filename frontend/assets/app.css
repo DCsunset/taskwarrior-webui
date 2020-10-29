@@ -1,0 +1,19 @@
+.v-application.task-app code {
+	font-weight: initial;
+	background-color: #2f2f2f;
+	color: rgba(255, 255, 255, 0.9);
+	font-size: 95%;
+	display: inline-block;
+	padding: 1px 0.5em 1px 0.5em;
+	margin: 2px;
+	margin-bottom: 14px;
+}
+/* Code block */
+.v-application.task-app pre code {
+	display: block;
+	padding: 0.5em 0.8em 0.5em 0.8em;
+}
+.v-application.task-app code:before,
+.v-application.task-app code:after {
+	content: initial;
+}

@@ -36,7 +36,9 @@ export default {
 		// mdi font
 		'@mdi/font/css/materialdesignicons.css',
 		// main font
-		'typeface-open-sans/index.css'
+		'typeface-open-sans/index.css',
+		// App css
+		'@/assets/app.css'
 	],
 	/*
   ** Plugins to load before mounting the App

@@ -11,7 +11,8 @@ export const state = () => ({
 	},
 	settings: {
 		dark: false,
-		autoRefresh: '5' // in minutes
+		autoRefresh: '5', // in minutes
+		autoSync: '0' // in minutes
 	}
 });
 
@@ -74,6 +75,10 @@ export const actions: ActionTree<RootState, RootState> = {
 		await this.$axios.$put('/api/tasks', { tasks });
 		// Refresh
 		await context.dispatch('fetchTasks');
+	},
+
+	async syncTasks(_context) {
+		await this.$axios.$post('/api/sync');
 	}
 };
 

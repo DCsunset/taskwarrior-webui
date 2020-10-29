@@ -51,19 +51,35 @@ export default defineComponent({
 	setup(_props, context) {
 		context.root.$store.dispatch('fetchTasks');
 
-		let interval: NodeJS.Timeout | null = null;
+		// Auto Refresh
+		let refreshInterval: NodeJS.Timeout | null = null;
 		const setAutoRefresh = () => {
-			if (interval)
-				clearInterval(interval);
+			if (refreshInterval)
+				clearInterval(refreshInterval);
 			const freq = +context.root.$store.state.settings.autoRefresh;
 			if (freq > 0) {
-				interval = setInterval(() => {
+				refreshInterval = setInterval(() => {
 					context.root.$store.dispatch('fetchTasks');
 				}, +context.root.$store.state.settings.autoRefresh * 60000);
 			}
 		};
 		setAutoRefresh();
 		watch(() => context.root.$store.state.settings, setAutoRefresh);
+
+		// Auto Sync
+		let syncInterval: NodeJS.Timeout | null = null;
+		const setAutoSync = () => {
+			if (syncInterval)
+				clearInterval(syncInterval);
+			const freq = +context.root.$store.state.settings.autoSync;
+			if (freq > 0) {
+				syncInterval = setInterval(() => {
+					context.root.$store.dispatch('syncTasks');
+				}, +context.root.$store.state.settings.autoSync * 60000);
+			}
+		};
+		setAutoSync();
+		watch(() => context.root.$store.state.settings, setAutoSync);
 
 		const mode = ref('Tasks');
 		const allModes = ['Tasks', 'Projects'];

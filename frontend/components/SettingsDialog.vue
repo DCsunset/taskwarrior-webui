@@ -36,7 +36,29 @@
 						<v-list-item-action>
 							<v-text-field
 								v-model="settings.autoRefresh"
-								style="width: 30px"
+								style="width: 40px"
+								:rules="numberRules"
+							/>
+						</v-list-item-action>
+					</v-list-item>
+
+					<v-list-item>
+						<v-list-item-content>
+							<v-list-item-title class="pb-1">
+								Auto Sync
+								<v-icon size="18px" class="ml-2" @click="sync" title="Sync immediately">
+									mdi-sync
+								</v-icon>
+							</v-list-item-title>
+							<v-list-item-subtitle>
+								in minutes (0 means no auto sync)<br />
+								run <code>task sync</code> periodically
+							</v-list-item-subtitle>
+						</v-list-item-content>
+						<v-list-item-action>
+							<v-text-field
+								v-model="settings.autoSync"
+								style="width: 40px"
 								:rules="numberRules"
 							/>
 						</v-list-item-action>
@@ -83,12 +105,14 @@ export default defineComponent({
 		const formRef = ref(null);
 		const settings = reactive({
 			dark: context.root.$store.state.settings.dark,
-			autoRefresh: context.root.$store.state.settings.autoRefresh
+			autoRefresh: context.root.$store.state.settings.autoRefresh,
+			autoSync: context.root.$store.state.settings.autoSync
 		});
 
 		const reset = () => {
 			settings.dark = context.root.$store.state.settings.dark;
 			settings.autoRefresh = context.root.$store.state.settings.autoRefresh;
+			settings.autoSync = context.root.$store.state.settings.autoSync;
 		};
 
 		const closeDialog = () => {
@@ -106,7 +130,12 @@ export default defineComponent({
 			}
 		};
 
+		const sync = async () => {
+			await context.root.$store.dispatch('syncTasks');
+		};
+
 		return {
+			sync,
 			showDialog,
 			closeDialog,
 			save,
