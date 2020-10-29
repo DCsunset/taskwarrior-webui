@@ -19,7 +19,7 @@ Responsive Web UI for Taskwarrior based on Vue.js and Koa.js.
 * Easy to deploy (using Docker)
 * Support for multiple types of tasks
 * Support for light and dark themes
-* Sync with the taskd server
+* Sync with a taskserver
 
 
 ## Deployment
@@ -84,6 +84,18 @@ npm run dev
 ```
 
 Then the frontend will listen at port 8080.
+
+
+## FAQ
+
+### Sync with a taskserver
+
+This Web UI supports auto sync with a taskd server
+by calling the `task sync` command periodically.
+In order to use this function,
+first you need to follow the [instructions](https://taskwarrior.org/docs/taskserver/setup.html)
+to configure both the taskserver and client manually until the `task sync` can be executed successfully.
+Then remember to map the client configurations (`.taskrc` and `.task`) into the container.
 
 
 ## License
