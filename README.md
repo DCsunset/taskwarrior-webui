@@ -17,8 +17,9 @@ Responsive Web UI for Taskwarrior based on Vue.js and Koa.js.
 * Material Design UI
 * PWA support
 * Easy to deploy (using Docker)
-* Support multiple types of tasks
-* Support light and dark modes
+* Support for multiple types of tasks
+* Support for light and dark themes
+* Sync with the taskd server
 
 
 ## Deployment
