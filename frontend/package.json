@@ -11,28 +11,29 @@
     "lint": "eslint --fix --ext .ts,.js,.vue ."
   },
   "dependencies": {
-    "@mdi/font": "^5.3.45",
-    "@nuxt/typescript-runtime": "^0.4.10",
-    "@nuxtjs/axios": "^5.11.0",
-    "@nuxtjs/proxy": "^2.0.0",
-    "@nuxtjs/pwa": "^3.0.0-beta.20",
-    "@vue/composition-api": "^1.0.0-beta.1",
-    "lodash": "^4.17.19",
-    "moment": "^2.27.0",
-    "nuxt": "^2.13.0",
-    "nuxt-typed-vuex": "^0.1.19",
-    "typeface-open-sans": "0.0.75"
+    "@mdi/font": "^5.8.55",
+    "@nuxt/typescript-runtime": "^2.0.0",
+    "@nuxtjs/axios": "^5.12.2",
+    "@nuxtjs/proxy": "^2.0.1",
+    "@nuxtjs/pwa": "^3.2.2",
+    "@vue/composition-api": "^1.0.0-beta.18",
+    "lodash": "^4.17.20",
+    "moment": "^2.29.1",
+    "nuxt": "^2.14.7",
+    "nuxt-typed-vuex": "^0.1.22",
+    "typeface-open-sans": "1.1.13"
   },
   "devDependencies": {
-    "@nuxt/typescript-build": "^1.0.3",
-    "@nuxtjs/eslint-config": "^3.0.0",
-    "@nuxtjs/eslint-config-typescript": "^2.0.0",
-    "@nuxtjs/eslint-module": "^2.0.0",
+    "@nuxt/types": "^2.14.7",
+    "@nuxt/typescript-build": "^2.0.3",
+    "@nuxtjs/eslint-config": "^4.0.0",
+    "@nuxtjs/eslint-config-typescript": "^4.0.0",
+    "@nuxtjs/eslint-module": "^3.0.0",
     "@nuxtjs/vuetify": "^1.11.2",
-    "@types/lodash": "^4.14.157",
+    "@types/lodash": "^4.14.163",
     "babel-eslint": "^10.1.0",
-    "eslint": "^7.2.0",
+    "eslint": "^7.12.1",
     "eslint-plugin-nuxt": "^1.0.0",
-    "taskwarrior-lib": "^0.2.0"
+    "taskwarrior-lib": "^0.4.2"
   }
 }
