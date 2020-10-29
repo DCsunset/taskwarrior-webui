@@ -64,7 +64,6 @@ export default defineComponent({
 			}
 		};
 		setAutoRefresh();
-		watch(() => context.root.$store.state.settings, setAutoRefresh);
 
 		// Auto Sync
 		let syncInterval: NodeJS.Timeout | null = null;
@@ -79,7 +78,13 @@ export default defineComponent({
 			}
 		};
 		setAutoSync();
-		watch(() => context.root.$store.state.settings, setAutoSync);
+
+		// Update settings
+		watch(() => context.root.$store.state.settings, () => {
+			setAutoSync();
+			setAutoRefresh();
+			context.root.$vuetify.theme.dark = context.root.$store.state.settings.dark;
+		});
 
 		const mode = ref('Tasks');
 		const allModes = ['Tasks', 'Projects'];
