@@ -130,6 +130,10 @@
 				</v-chip>
 			</template>
 
+			<template v-slot:item.urgency="{ item }">
+				{{ item.urgency }}
+			</template>
+
 			<template v-slot:item.actions="{ item }">
 				<v-icon
 					v-show="status === 'pending'"
@@ -247,6 +251,7 @@ export default defineComponent({
 				: [{ text: 'Wait', value: 'wait' }]),
 			{ text: 'Until', value: 'until' },
 			{ text: 'Tags', value: 'tags' },
+			{ text: 'Urgency', value: 'urgency' },
 			{ text: 'Actions', value: 'actions', sortable: false }
 		]);
 
