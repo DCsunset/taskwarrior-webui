@@ -3,7 +3,7 @@ FROM alpine:latest
 # Debug
 # RUN sed -i 's/dl-cdn.alpinelinux.org/mirrors.tuna.tsinghua.edu.cn/g' /etc/apk/repositories
 
-RUN apk --no-cache add nodejs npm nginx task
+RUN apk --no-cache add nodejs npm nginx task python
 
 COPY ./frontend /src/frontend
 COPY ./backend /src/backend
