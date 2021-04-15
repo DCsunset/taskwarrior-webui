@@ -228,7 +228,6 @@ function linkify(text: string) {
 	let lastIndex = 0;
 	let result = '';
 	while ((match = regex.exec(text)) !== null) {
-		console.log(match[0], match.index);
 		const str = text.substring(lastIndex, match.index);
 		const url = `<a target="_blank" href=${normalizeUrl(match[0])}>${match[0]}</a>`;
 		result = `${result}${str}${url}`;
@@ -236,7 +235,6 @@ function linkify(text: string) {
 	}
 	result += text.substring(lastIndex);
 
-	console.log(result);
 	return result;
 }
 
