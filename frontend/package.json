@@ -19,9 +19,11 @@
     "@vue/composition-api": "^1.0.0-beta.18",
     "lodash": "^4.17.20",
     "moment": "^2.29.1",
+    "normalize-url": "^6.0.0",
     "nuxt": "^2.14.7",
     "nuxt-typed-vuex": "^0.1.22",
-    "typeface-open-sans": "1.1.13"
+    "typeface-open-sans": "1.1.13",
+    "url-regex-safe": "^2.0.2"
   },
   "devDependencies": {
     "@nuxt/types": "^2.14.7",
@@ -31,6 +33,7 @@
     "@nuxtjs/eslint-module": "^3.0.0",
     "@nuxtjs/vuetify": "^1.11.2",
     "@types/lodash": "^4.14.163",
+    "@types/url-regex-safe": "^1.0.0",
     "babel-eslint": "^10.1.0",
     "eslint": "^7.12.1",
     "eslint-plugin-nuxt": "^1.0.0",

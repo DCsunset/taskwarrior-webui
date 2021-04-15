@@ -110,6 +110,10 @@
 				</v-row>
 			</template>
 
+			<template v-slot:item.description="{ item }">
+				<span v-html="linkify(item.description)" />
+			</template>
+
 			<template v-if="status === 'waiting'" v-slot:item.wait="{ item }">
 				{{ displayDate(item.wait) }}
 			</template>
@@ -182,6 +186,8 @@ import _ from 'lodash';
 import TaskDialog from '../components/TaskDialog.vue';
 import ConfirmationDialog from '../components/ConfirmationDialog.vue';
 import moment from 'moment';
+import urlRegex from 'url-regex-safe';
+import normalizeUrl from 'normalize-url';
 
 function displayDate(str?: string) {
 	if (!str)
@@ -213,6 +219,25 @@ function expiredDate(str?: string) {
 
 	const date = moment(str);
 	return date.isBefore(moment());
+}
+
+function linkify(text: string) {
+	const regex = urlRegex();
+
+	let match;
+	let lastIndex = 0;
+	let result = '';
+	while ((match = regex.exec(text)) !== null) {
+		console.log(match[0], match.index);
+		const str = text.substring(lastIndex, match.index);
+		const url = `<a target="_blank" href=${normalizeUrl(match[0])}>${match[0]}</a>`;
+		result = `${result}${str}${url}`;
+		lastIndex = match.index + match[0].length;
+	}
+	result += text.substring(lastIndex);
+
+	console.log(result);
+	return result;
 }
 
 interface Props {
@@ -340,6 +365,7 @@ export default defineComponent({
 		};
 
 		return {
+			linkify,
 			refresh,
 			headers,
 			classifiedTasks,
