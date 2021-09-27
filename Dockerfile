@@ -7,8 +7,7 @@ RUN apk --no-cache add nodejs npm nginx task python3 build-base
 
 COPY ./frontend /src/frontend
 COPY ./backend /src/backend
-COPY ./nginx/nginx.conf /etc/nginx/nginx.conf
-COPY ./nginx/server.conf /etc/nginx/conf.d/default.conf
+COPY ./nginx/server.conf /etc/nginx/http.d/default.conf
 COPY ./docker/start.sh /start.sh
 
 # Debug
