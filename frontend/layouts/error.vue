@@ -22,11 +22,6 @@ interface Props {
 
 export default defineComponent({
 	layout: 'empty',
-	props: {
-		error: {
-			type: Object
-		}
-	},
 	data () {
 		return {
 			pageNotFound: '404 Not Found',
