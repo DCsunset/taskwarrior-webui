@@ -1,6 +1,10 @@
 name: Build and Publish Docker Image
 
-on: [push, workflow_dispatch]
+on:
+  push:
+    branches:
+      - master
+  workflow_dispatch:
 
 jobs:
   push_to_registry:
