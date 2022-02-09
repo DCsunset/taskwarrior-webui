@@ -91,7 +91,7 @@ Contributions are very welcome!
 Please create or comment on an issue to discuss your ideas first before working on any PR.
 
 I've been very busy recently and may not be able to handle every issue timely.
-So I'm also looking for maintainers who is interested in maintaining this project.
+So I'm also looking for maintainers who are interested in this project.
 Feel free to open an issue if you have any interest.
 
 ## FAQ
