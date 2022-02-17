@@ -280,9 +280,20 @@ export default defineComponent({
 
 		const tempTasks: { [key: string]: ComputedRef<Task[]> } = {};
 		for (const status of allStatus) {
-			tempTasks[status] = computed((): Task[] => props.tasks?.filter(task => task.status === status));
+			tempTasks[status] = computed((): Task[] => props.tasks?.filter(task => {
+				if (status === "waiting") {
+					return task.status === "pending" && task.wait && !expiredDate(task.wait);
+				}
+				else if (status === "pending") {
+					return task.status === "pending" && !(task.wait && !expiredDate(task.wait));
+				}
+				else {
+					return task.status === status;
+				}
+			}));
 		}
 		const classifiedTasks = reactive(tempTasks);
+		console.log(classifiedTasks)
 
 		const refresh = () => {
 			context.root.$store.dispatch('fetchTasks');
