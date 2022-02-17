@@ -293,7 +293,6 @@ export default defineComponent({
 			}));
 		}
 		const classifiedTasks = reactive(tempTasks);
-		console.log(classifiedTasks)
 
 		const refresh = () => {
 			context.root.$store.dispatch('fetchTasks');
