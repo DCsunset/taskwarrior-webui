@@ -64,6 +64,12 @@ Then install nginx or other web servers
 to server frontend and proxy requests to backend
 (you can refer to `nginx/nginx.conf`).
 
+### Configuration
+
+The following environment variable may be set:
+ * `TASKRC` - the location of the `.taskrc` file, `/.taskrc` by default when run in _production_ mode
+ * `TASKDATA` - the location of the `.task` directory, `/.task` by default when run in _production_ mode
+
 
 ## Development
 
