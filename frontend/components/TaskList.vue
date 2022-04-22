@@ -8,7 +8,8 @@
 		/>
 		<TaskDialog v-model="showTaskDialog" :task="currentTask" />
 
-		<v-btn-toggle v-model="status" mandatory background-color="rgba(0, 0, 0, 0)">
+		<v-row class="px-4 pt-4">
+			<v-btn-toggle v-model="status" mandatory background-color="rgba(0, 0, 0, 0)">
 			<v-row class="pa-3">
 				<v-btn
 					v-for="st in allStatus"
@@ -34,7 +35,9 @@
 				</v-btn>
 			</v-row>
 		</v-btn-toggle>
+  </v-row>
 
+  <v-row class="px-4 pt-4">
 		<v-data-table
 			:items="classifiedTasks[status]"
 			:headers="headers"
@@ -43,6 +46,7 @@
 			:item-class="rowClass"
 			v-model="selected"
 			class="elevation-1"
+			style="width: 100%"
 		>
 			<template v-slot:top>
 				<v-row class="px-4">
@@ -176,7 +180,8 @@
 				</v-icon>
 			</template>
 		</v-data-table>
-	</div>
+  </v-row>
+  </div>
 </template>
 
 <script lang="ts">
