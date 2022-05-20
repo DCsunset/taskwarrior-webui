@@ -74,6 +74,36 @@
 							:disabled="!recur"
 						/>
 					</v-row>
+
+					<v-list subheader dense flat>
+						<v-subheader>Annotations</v-subheader>
+						<v-list-item>
+							<v-list-item-content>
+								<v-text-field
+									placeholder="Annotation text"
+									v-model="addAnnotationDescription"
+								/>
+							</v-list-item-content>
+							<v-list-item-action>
+								<v-btn
+									class="primary ml-1"
+									fab
+									dark
+									x-small
+									title="Add annotation"
+									@click="addAnnotation"
+								>
+									<v-icon>mdi-plus</v-icon>
+								</v-btn>
+							</v-list-item-action>
+						</v-list-item>
+						<v-list-item v-for="a in formData.annotations" :key="a.entry">
+							<v-list-item-content>
+								<v-list-item-title v-text="a.description"></v-list-item-title>
+								<v-list-item-subtitle v-text="a.entry"></v-list-item-subtitle>
+							</v-list-item-content>
+						</v-list-item>
+					</v-list>
 				</v-form>
 			</v-card-text>
 
@@ -127,6 +157,8 @@ export default defineComponent({
 			(str: string) => Boolean(str) || 'Required'
 		];
 
+		const addAnnotationDescription = ref('');
+
 		const recur = ref(Boolean(props.task?.recur));
 		const formData = ref({
 			description: '',
@@ -136,6 +168,7 @@ export default defineComponent({
 			until: '',
 			wait: '',
 			tags: [] as string[],
+			annotations: [] as {entry: string; description: string}[],
 			priority: 'N',
 			recur: '',
 			...props.task
@@ -150,12 +183,17 @@ export default defineComponent({
 				until: '',
 				wait: '',
 				tags: [] as string[],
+				annotations: [] as {entry: string; description: string}[],
 				priority: 'N',
 				recur: '',
 				...props.task
 			};
 			recur.value = Boolean(props.task?.recur);
-			(formRef.value as any).resetValidation();
+			if (formRef.value) {
+				(formRef.value as any).resetValidation();
+			}
+
+			addAnnotationDescription.value = "";
 		};
 
 		watch(() => props.task, () => {
@@ -163,6 +201,15 @@ export default defineComponent({
 		});
 
 		const formRef = ref(null);
+
+		const addAnnotation = () => {
+			formData.value.annotations.push({
+				entry: new Date().toISOString(),
+				description: addAnnotationDescription.value
+			});
+
+			addAnnotationDescription.value = "";
+		};
 
 		const closeDialog = () => {
 			showDialog.value = false;
@@ -173,6 +220,7 @@ export default defineComponent({
 			if (valid) {
 				await context.root.$store.dispatch('updateTasks', [{
 					...formData.value,
+					annotations: formData.value.annotations || [],
 					project: formData.value.project || undefined,
 					scheduled: formData.value.scheduled || undefined,
 					due: formData.value.due || undefined,
@@ -204,6 +252,8 @@ export default defineComponent({
 			priorities,
 			recur,
 			formData,
+			addAnnotationDescription,
+			addAnnotation,
 			closeDialog,
 			reset,
 			submit,
