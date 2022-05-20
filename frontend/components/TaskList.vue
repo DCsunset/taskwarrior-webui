@@ -121,6 +121,9 @@
 			<template v-if="status === 'waiting'" v-slot:item.wait="{ item }">
 				{{ displayDate(item.wait) }}
 			</template>
+			<template v-slot:item.scheduled="{ item }">
+				{{ displayDate(item.scheduled) }}
+			</template>
 			<template v-slot:item.due="{ item }">
 				{{ displayDate(item.due) }}
 			</template>
@@ -226,6 +229,14 @@ function expiredDate(str?: string) {
 	return date.isBefore(moment());
 }
 
+function futureDate(str?: string) {
+	if (!str)
+		return false;
+
+	const date = moment(str);
+	return date.isAfter(moment());
+}
+
 function linkify(text: string) {
 	const regex = urlRegex();
 
@@ -271,6 +282,7 @@ export default defineComponent({
 			{ text: 'Project', value: 'project' },
 			{ text: 'Description', value: 'description' },
 			{ text: 'Priority', value: 'priority' },
+			{ text: 'Scheduled', value: 'scheduled' },
 			...(status.value === 'recurring'
 				? [{ text: 'Recur', value: 'recur' }]
 				: []),
@@ -286,8 +298,10 @@ export default defineComponent({
 		const tempTasks: { [key: string]: ComputedRef<Task[]> } = {};
 		for (const status of allStatus) {
 			tempTasks[status] = computed((): Task[] => props.tasks?.filter(task => {
-				if (status === "waiting") {
-					return task.status === "pending" && task.wait && !expiredDate(task.wait);
+				if (status === "waiting" || status === "pending") {
+					const waiting = (task.wait && !expiredDate(task.wait))
+						|| (task.scheduled && futureDate(task.scheduled));
+					return task.status === "pending" && (status === "pending" ? !waiting : waiting);
 				}
 				else if (status === "pending") {
 					return task.status === "pending" && !(task.wait && !expiredDate(task.wait));

@@ -25,6 +25,10 @@
 						label="Project"
 					/>
 					<v-text-field
+						v-model="formData.scheduled"
+						label="Scheduled"
+					/>
+					<v-text-field
 						v-model="formData.due"
 						:label="recur ? 'Due*' : 'Due'"
 						:rules="recur ? requiredRules : []"
@@ -127,6 +131,7 @@ export default defineComponent({
 		const formData = ref({
 			description: '',
 			project: '',
+			scheduled: '',
 			due: '',
 			until: '',
 			wait: '',
@@ -140,6 +145,7 @@ export default defineComponent({
 			formData.value = {
 				description: '',
 				project: '',
+				scheduled: '',
 				due: '',
 				until: '',
 				wait: '',
@@ -168,6 +174,7 @@ export default defineComponent({
 				await context.root.$store.dispatch('updateTasks', [{
 					...formData.value,
 					project: formData.value.project || undefined,
+					scheduled: formData.value.scheduled || undefined,
 					due: formData.value.due || undefined,
 					until: formData.value.until || undefined,
 					wait: formData.value.wait || undefined,
