@@ -11,8 +11,8 @@ COPY ./nginx/nginx.conf /etc/nginx/nginx.conf
 COPY ./nginx/server.conf /etc/nginx/conf.d/default.conf
 COPY ./docker/start.sh /start.sh
 
-# Debug
-# RUN npm config set registry https://registry.npm.taobao.org
+ENV TASKRC="/.taskrc"
+ENV TASKDATA="/.task"
 
 # Frontend
 RUN cd /src/frontend && npm install \
@@ -28,7 +28,7 @@ RUN cd /src/backend && npm install \
 
 EXPOSE 80
 
-# Taskwarrior data volumn
+# Taskwarrior data volume
 VOLUME [ "/.task", "/.taskrc" ]
 
 CMD ["/start.sh"]
