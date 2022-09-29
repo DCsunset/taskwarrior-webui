@@ -15,7 +15,7 @@ ENV TASKRC="/.taskrc"
 ENV TASKDATA="/.task"
 
 # Frontend
-RUN cd /src/frontend && npm install \
+RUN cd /src/frontend && npm install --legacy-peer-deps \
 	&& npm run build && npm run export \
 	&& cp -r /src/frontend/dist /static \
 	&& rm -r /src/frontend
