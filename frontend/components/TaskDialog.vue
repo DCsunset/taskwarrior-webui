@@ -105,7 +105,7 @@
 						</v-list-item>
 						<v-list-item v-for="a in formData.annotations" :key="a.entry">
 							<v-list-item-content>
-								<v-list-item-title v-text="a.description"></v-list-item-title>
+								<v-list-item-title v-text="a.description" class="text-wrap"></v-list-item-title>
 								<v-list-item-subtitle v-text="a.entry"></v-list-item-subtitle>
 							</v-list-item-content>
 						</v-list-item>
