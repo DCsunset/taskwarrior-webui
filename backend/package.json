@@ -4,7 +4,7 @@
   "description": "",
   "main": "index.js",
   "scripts": {
-    "dev": "ts-node src/app.ts",
+    "dev": "TASKRC=./test/.taskrc TASKDATA=./test/.task ts-node src/app.ts",
     "build": "rm -rf dist && tsc",
     "start": "node ./dist/app.js"
   },
