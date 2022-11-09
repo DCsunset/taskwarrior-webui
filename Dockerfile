@@ -13,7 +13,6 @@ COPY ./docker/start.sh /start.sh
 
 ENV TASKRC="/.taskrc"
 ENV TASKDATA="/.task"
-ENV NODE_ENV=production
 
 # Frontend
 RUN cd /src/frontend && npm install \
