@@ -1,6 +1,7 @@
 import * as Router from '@koa/router';
 
 import taskwarrior from './taskwarrior';
+import { Task } from "taskwarrior-lib";
 
 const router = new Router();
 
@@ -10,7 +11,8 @@ router.get('/', async ctx => {
 });
 
 router.put('/', async ctx => {
-	const msg = taskwarrior.update(ctx.request.body.tasks);
+	const body = ctx.request.body as { tasks: Task[] };
+	const msg = taskwarrior.update(body.tasks);
 	console.log(msg);
 	ctx.status = 200;
 });
