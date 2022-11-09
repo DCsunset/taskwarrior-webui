@@ -39,6 +39,14 @@ docker run -d -p 8080:80 --name taskwarrior-webui \
 	dcsunset/taskwarrior-webui
 ```
 
+## Configurations
+
+The following environment variables may be set:
+ * `TASKRC` - the location of the `.taskrc` file, `/.taskrc` by default when run in _production_ mode
+ * `TASKDATA` - the location of the `.task` directory, `/.task` by default when run in _production_ mode
+
+Remember to mount your files to **the corresponding locations** when you set `TASKRC` or `TASKDATA` to a different value.
+
 ### Manually deploy
 
 First build the frontend:
@@ -62,13 +70,6 @@ npm start
 Then install nginx or other web servers
 to server frontend and proxy requests to backend
 (you can refer to `nginx/nginx.conf`).
-
-### Configuration
-
-The following environment variable may be set:
- * `TASKRC` - the location of the `.taskrc` file, `/.taskrc` by default when run in _production_ mode
- * `TASKDATA` - the location of the `.task` directory, `/.task` by default when run in _production_ mode
-
 
 ## Development
 
