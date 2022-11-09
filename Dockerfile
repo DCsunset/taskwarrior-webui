@@ -16,7 +16,7 @@ ENV TASKDATA="/.task"
 ENV NODE_ENV=production
 
 # Frontend
-RUN cd /src/frontend && npm install --legacy-peer-deps \
+RUN cd /src/frontend && npm install \
 	&& npm run build && npm run export \
 	&& cp -r /src/frontend/dist /static \
 	&& rm -r /src/frontend
