@@ -43,24 +43,27 @@
 </template>
 
 <script lang="ts">
-import { defineComponent, ref, computed, watch, ComputedRef } from '@vue/composition-api';
+import { defineComponent, ref, computed, watch, ComputedRef, useStore, useContext } from '@nuxtjs/composition-api';
 import TaskList from '../components/TaskList.vue';
 import { Task } from 'taskwarrior-lib';
+import { accessorType  } from "../store";
 
 export default defineComponent({
-	setup(_props, context) {
-		context.root.$store.dispatch('fetchTasks');
+	setup() {
+		const store = useStore<typeof accessorType>();
+		const context = useContext();
+		store.dispatch('fetchTasks');
 
 		// Auto Refresh
 		let refreshInterval: NodeJS.Timeout | null = null;
 		const setAutoRefresh = () => {
 			if (refreshInterval)
 				clearInterval(refreshInterval);
-			const freq = +context.root.$store.state.settings.autoRefresh;
+			const freq = +store.state.settings.autoRefresh;
 			if (freq > 0) {
 				refreshInterval = setInterval(() => {
-					context.root.$store.dispatch('fetchTasks');
-				}, +context.root.$store.state.settings.autoRefresh * 60000);
+					store.dispatch('fetchTasks');
+				}, +store.state.settings.autoRefresh * 60000);
 			}
 		};
 		setAutoRefresh();
@@ -70,27 +73,27 @@ export default defineComponent({
 		const setAutoSync = () => {
 			if (syncInterval)
 				clearInterval(syncInterval);
-			const freq = +context.root.$store.state.settings.autoSync;
+			const freq = +store.state.settings.autoSync;
 			if (freq > 0) {
 				syncInterval = setInterval(() => {
-					context.root.$store.dispatch('syncTasks');
-				}, +context.root.$store.state.settings.autoSync * 60000);
+					store.dispatch('syncTasks');
+				}, +store.state.settings.autoSync * 60000);
 			}
 		};
 		setAutoSync();
 
 		// Update settings
-		watch(() => context.root.$store.state.settings, () => {
+		watch(() => store.state.settings, () => {
 			setAutoSync();
 			setAutoRefresh();
-			context.root.$vuetify.theme.dark = context.root.$store.state.settings.dark;
+			context.$vuetify.theme.dark = store.state.settings.dark;
 		});
 
 		const mode = ref('Tasks');
 		const allModes = ['Tasks', 'Projects'];
 
 		const project = ref('');
-		const projects: ComputedRef<string[]> = computed(() => context.root.$store.getters.projects);
+		const projects: ComputedRef<string[]> = computed(() => store.getters.projects);
 		watch(projects, () => {
 			if (projects.value.includes(project.value))
 				return;
@@ -102,10 +105,10 @@ export default defineComponent({
 
 		const tasks: ComputedRef<Task[]> = computed(() => {
 			if (mode.value === 'Tasks')
-				return context.root.$store.state.tasks;
+				return store.state.tasks;
 
 			if (project.value)
-				return context.root.$store.state.tasks.filter(
+				return store.state.tasks.filter(
 					(task: Task) => task.project === project.value
 				);
 

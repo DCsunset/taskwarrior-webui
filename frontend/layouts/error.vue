@@ -13,15 +13,10 @@
 </template>
 
 <script lang="ts">
-import { defineComponent } from '@vue/composition-api';
+import { defineComponent } from '@nuxtjs/composition-api';
 import { NuxtError } from '@nuxt/types';
 
-interface Props {
-	error: NuxtError
-};
-
 export default defineComponent({
-	layout: 'empty',
 	data () {
 		return {
 			pageNotFound: '404 Not Found',
@@ -29,7 +24,14 @@ export default defineComponent({
 		};
 	},
 
-	setup(props: Props, _context) {
+	props: {
+		error: {
+			type: Object as () => NuxtError,
+			required: true
+		}
+	},
+
+	setup(props) {
 		return {
 			error: props.error
 		};

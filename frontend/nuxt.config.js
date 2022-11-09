@@ -45,7 +45,6 @@ export default {
   ** https://nuxtjs.org/guide/plugins
   */
 	plugins: [
-		'@/plugins/composition-api'
 	],
 	/*
   ** Auto import components
@@ -57,7 +56,8 @@ export default {
   */
 	buildModules: [
 		'@nuxt/typescript-build',
-		'@nuxtjs/vuetify'
+		'@nuxtjs/vuetify',
+		'@nuxtjs/composition-api/module'
 	],
 	/*
   ** Nuxt.js modules

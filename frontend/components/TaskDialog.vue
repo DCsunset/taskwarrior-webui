@@ -130,33 +130,27 @@
 </template>
 
 <script lang="ts">
-import { defineComponent, watch, computed, ref } from '@vue/composition-api';
+import { defineComponent, useStore, watch, computed, ref } from '@nuxtjs/composition-api';
 import { Task } from 'taskwarrior-lib';
-
-interface Props {
-	[key: string]: unknown,
-	value: boolean,
-	task?: Task;
-}
+import { accessorType  } from "../store";
 
 export default defineComponent({
 	props: {
-		value: {
-			type: Boolean,
-			required: true
-		},
+		value: Boolean,
 		task: {
-			type: Object,
+			type: Object as () => Task,
 			required: false
 		}
 	},
-	setup(props: Props, context) {
-		const projects = computed(() => context.root.$store.getters.projects);
-		const tags = computed(() => context.root.$store.getters.tags);
+	setup(props, ctx) {
+		const store = useStore<typeof accessorType>();
+
+		const projects = computed(() => store.getters.projects);
+		const tags = computed(() => store.getters.tags);
 
 		const showDialog = computed({
 			get: () => props.value,
-			set: val => context.emit('input', val)
+			set: val => ctx.emit('input', val)
 		});
 
 		const requiredRules = [
@@ -224,7 +218,7 @@ export default defineComponent({
 		const submit = async () => {
 			const valid = (formRef.value as any).validate();
 			if (valid) {
-				await context.root.$store.dispatch('updateTasks', [{
+				await store.dispatch('updateTasks', [{
 					...formData.value,
 					annotations: formData.value.annotations || [],
 					project: formData.value.project || undefined,
@@ -235,7 +229,7 @@ export default defineComponent({
 					priority: formData.value.priority === 'N' ? undefined : formData.value.priority,
 					recur: recur.value ? formData.value.recur : undefined
 				}]);
-				context.root.$store.commit('setNotification', {
+				store.commit('setNotification', {
 					color: 'success',
 					text: `Successfully ${props.task ? 'update' : 'create'} the task`
 				});

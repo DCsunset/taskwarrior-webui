@@ -6,7 +6,7 @@
 			:text="confirmation.text"
 			@yes="confirmation.handler"
 		/>
-		<TaskDialog v-model="showTaskDialog" :task="currentTask" />
+		<TaskDialog v-model="showTaskDialog" :task="currentTask || undefined" />
 
 		<v-row class="px-4 pt-4">
 			<v-btn-toggle v-model="status" mandatory background-color="rgba(0, 0, 0, 0)">
@@ -27,8 +27,8 @@
 					</v-icon>
 					{{ st }}
 					<v-badge
-						v-if="st === 'pending' && classifiedTasks[st].length"
-						:content="classifiedTasks[st].length"
+						v-if="st === 'pending' && classifiedTasks[st].value && classifiedTasks[st].value.length"
+						:content="classifiedTasks[st].value.length"
 						:color="st === status ? 'primary' : 'grey'"
 						inline
 					/>
@@ -188,7 +188,7 @@
 </template>
 
 <script lang="ts">
-import { defineComponent, computed, reactive, ref, ComputedRef, Ref } from '@vue/composition-api';
+import { defineComponent, useStore, computed, reactive, ref, ComputedRef, Ref } from '@nuxtjs/composition-api';
 import { Task } from 'taskwarrior-lib';
 import _ from 'lodash';
 import TaskDialog from '../components/TaskDialog.vue';
@@ -196,6 +196,7 @@ import ConfirmationDialog from '../components/ConfirmationDialog.vue';
 import moment from 'moment';
 import urlRegex from 'url-regex-safe';
 import normalizeUrl from 'normalize-url';
+import { accessorType  } from "../store";
 
 function displayDate(str?: string) {
 	if (!str)
@@ -254,24 +255,21 @@ function linkify(text: string) {
 	return result;
 }
 
-interface Props {
-	[key: string]: unknown,
-	tasks: Task[]
-}
-
 export default defineComponent({
 	props: {
 		tasks: {
-			type: Array as () => Task[]
+			type: Array as () => Task[],
+			required: true
 		}
 	},
 
-	setup(props: Props, context) {
+	setup(props) {
+		const store = useStore<typeof accessorType>();
 		const selected = ref([] as Task[]);
 
 		const status = ref('pending');
 		const allStatus = ['pending', 'waiting', 'completed', 'deleted', 'recurring'];
-		const statusIcons = {
+		const statusIcons: { [st: string]: string } = {
 			pending: 'mdi-clock-outline',
 			waiting: 'mdi-pause',
 			completed: 'mdi-check',
@@ -314,7 +312,7 @@ export default defineComponent({
 		const classifiedTasks = reactive(tempTasks);
 
 		const refresh = () => {
-			context.root.$store.dispatch('fetchTasks');
+			store.dispatch('fetchTasks');
 		};
 
 		const showConfirmationDialog = ref(false);
@@ -337,14 +335,14 @@ export default defineComponent({
 		};
 
 		const completeTasks = async (tasks: Task[]) => {
-			await context.root.$store.dispatch('updateTasks', tasks.map(task => {
+			await store.dispatch('updateTasks', tasks.map(task => {
 				return {
 					...task,
 					status: 'completed'
 				};
 			}));
 			selected.value = selected.value.filter(task => tasks.findIndex(t => t.uuid === task.uuid) === -1);
-			context.root.$store.commit('setNotification', {
+			store.commit('setNotification', {
 				color: 'success',
 				text: 'Successfully complete the task(s)'
 			});
@@ -353,9 +351,9 @@ export default defineComponent({
 		const deleteTasks = (tasks: Task[]) => {
 			confirmation.text = 'Are you sure to delete the task(s)?';
 			confirmation.handler = async () => {
-				await context.root.$store.dispatch('deleteTasks', tasks);
+				await store.dispatch('deleteTasks', tasks);
 				selected.value = selected.value.filter(task => tasks.findIndex(t => t.uuid === task.uuid) === -1);
-				context.root.$store.commit('setNotification', {
+				store.commit('setNotification', {
 					color: 'success',
 					text: 'Successfully delete the task(s)'
 				});
@@ -366,14 +364,14 @@ export default defineComponent({
 		const restoreTasks = (tasks: Task[]) => {
 			confirmation.text = 'Are you sure to restore the task(s)?';
 			confirmation.handler = async () => {
-				await context.root.$store.dispatch('updateTasks', tasks.map(task => {
+				await store.dispatch('updateTasks', tasks.map(task => {
 					return {
 						...task,
 						status: 'pending'
 					};
 				}));
 				selected.value = selected.value.filter(task => tasks.findIndex(t => t.uuid === task.uuid) === -1);
-				context.root.$store.commit('setNotification', {
+				store.commit('setNotification', {
 					color: 'success',
 					text: 'Successfully restore the task(s)'
 				});

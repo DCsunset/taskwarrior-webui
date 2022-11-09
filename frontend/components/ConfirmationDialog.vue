@@ -21,14 +21,11 @@
 </template>
 
 <script lang="ts">
-import { defineComponent, computed } from '@vue/composition-api';
+import { defineComponent, computed } from '@nuxtjs/composition-api';
 
 export default defineComponent({
 	props: {
-		value: {
-			type: Boolean,
-			required: true
-		},
+		value: Boolean,
 		title: {
 			type: String,
 			required: true

@@ -82,20 +82,20 @@
 </template>
 
 <script lang="ts">
-import { defineComponent, computed, ref, reactive } from '@vue/composition-api';
+import { watch, defineComponent, useStore, computed, ref, reactive } from '@nuxtjs/composition-api';
+import { accessorType  } from "../store";
 
 export default defineComponent({
 	props: {
-		value: {
-			type: Boolean,
-			required: true
-		}
+		value: Boolean,
 	},
 
-	setup(props, context) {
+	setup(props, ctx) {
+		const store = useStore<typeof accessorType>();
+
 		const showDialog = computed({
 			get: () => props.value,
-			set: val => context.emit('input', val)
+			set: val => ctx.emit('input', val)
 		});
 
 		const numberRules = [
@@ -104,15 +104,15 @@ export default defineComponent({
 
 		const formRef = ref(null);
 		const settings = reactive({
-			dark: context.root.$store.state.settings.dark,
-			autoRefresh: context.root.$store.state.settings.autoRefresh,
-			autoSync: context.root.$store.state.settings.autoSync
+			dark: store.state.settings.dark,
+			autoRefresh: store.state.settings.autoRefresh,
+			autoSync: store.state.settings.autoSync
 		});
 
 		const reset = () => {
-			settings.dark = context.root.$store.state.settings.dark;
-			settings.autoRefresh = context.root.$store.state.settings.autoRefresh;
-			settings.autoSync = context.root.$store.state.settings.autoSync;
+			settings.dark = store.state.settings.dark;
+			settings.autoRefresh = store.state.settings.autoRefresh;
+			settings.autoSync = store.state.settings.autoSync;
 		};
 
 		const closeDialog = () => {
@@ -123,7 +123,7 @@ export default defineComponent({
 		const save = () => {
 			const valid = (formRef as any).value.validate();
 			if (valid) {
-				context.root.$store.dispatch('updateSettings', {
+				store.dispatch('updateSettings', {
 					...settings
 				});
 				closeDialog();
@@ -131,7 +131,7 @@ export default defineComponent({
 		};
 
 		const sync = async () => {
-			await context.root.$store.dispatch('syncTasks');
+			await store.dispatch('syncTasks');
 		};
 
 		return {

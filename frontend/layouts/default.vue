@@ -42,37 +42,40 @@
 			</v-icon>
 		</v-app-bar>
 
-		<v-content>
+		<v-main>
 			<v-container fluid>
 				<nuxt />
 			</v-container>
-		</v-content>
+		</v-main>
 	</v-app>
 </template>
 
 <script lang="ts">
-import { defineComponent, computed, onErrorCaptured, ref } from '@vue/composition-api';
+import { defineComponent, useContext, useStore, computed, onErrorCaptured, ref, watch } from '@nuxtjs/composition-api';
 import SettingsDialog from '../components/SettingsDialog.vue';
+import { accessorType  } from "../store";
 
 export default defineComponent({
-	setup(_props, context) {
-		context.root.$store.dispatch('fetchSettings');
+	setup(_props, ctx) {
+		const context = useContext();
+		const store = useStore<typeof accessorType>();
+		store.dispatch('fetchSettings');
 
-		context.root.$vuetify.theme.dark = context.root.$store.state.settings.dark;
+		context.$vuetify.theme.dark = store.state.settings.dark;
 
 		const dark = computed({
-			get: () => context.root.$vuetify.theme.dark,
+			get: () => context.$vuetify.theme.dark,
 			set: val => {
-				context.root.$vuetify.theme.dark = val;
+				context.$vuetify.theme.dark = val;
 			}
 		});
 
 		const settingsDialog = ref(false);
 
-		const notification = computed(() => context.root.$store.state.notification);
+		const notification = computed(() => store.state.notification);
 		const snackbar = computed({
-			get: () => context.root.$store.state.snackbar,
-			set: val => context.root.$store.commit('setSnackbar', val)
+			get: () => store.state.snackbar,
+			set: val => store.commit('setSnackbar', val)
 		});
 
 		onErrorCaptured((err: any) => {
@@ -92,7 +95,7 @@ export default defineComponent({
 					text: `Error ${name}: ${message}`
 				};
 			}
-			context.root.$store.commit('setNotification', notification);
+			store.commit('setNotification', notification);
 			return false;
 		});
 
