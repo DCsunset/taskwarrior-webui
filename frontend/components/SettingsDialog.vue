@@ -27,6 +27,20 @@
 					<v-list-item>
 						<v-list-item-content>
 							<v-list-item-title>
+								Mobile Tasklist
+							</v-list-item-title>
+							<v-list-item-subtitle>
+								multiple tasks per line
+							</v-list-item-subtitle>
+						</v-list-item-content>
+						<v-list-item-action>
+							<v-checkbox v-model="settings.mobilelist" />
+						</v-list-item-action>
+					</v-list-item>
+
+					<v-list-item>
+						<v-list-item-content>
+							<v-list-item-title>
 								Auto Refresh
 							</v-list-item-title>
 							<v-list-item-subtitle>
@@ -106,7 +120,8 @@ export default defineComponent({
 		const settings = reactive({
 			dark: store.state.settings.dark,
 			autoRefresh: store.state.settings.autoRefresh,
-			autoSync: store.state.settings.autoSync
+			autoSync: store.state.settings.autoSync,
+			mobilelist: store.state.settings.mobilelist
 		});
 
 		const reset = () => {
