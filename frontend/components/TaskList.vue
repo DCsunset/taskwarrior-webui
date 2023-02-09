@@ -47,6 +47,7 @@
 			v-model="selected"
 			class="elevation-1"
 			style="width: 100%"
+			:mobile-breakpoint="store.state.settings.mobilelist ? undefined : 0"
 		>
 			<template v-slot:top>
 				<v-row class="px-4">
@@ -390,6 +391,7 @@ export default defineComponent({
 		};
 
 		return {
+			store,
 			linkify,
 			refresh,
 			headers,
