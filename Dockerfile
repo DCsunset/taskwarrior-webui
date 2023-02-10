@@ -14,6 +14,9 @@ COPY ./docker/start.sh /start.sh
 ENV TASKRC="/.taskrc"
 ENV TASKDATA="/.task"
 
+# Fix npm build
+ENV NODE_OPTIONS="--openssl-legacy-provider"
+
 # Frontend
 RUN cd /src/frontend && npm install \
 	&& npm run build && npm run export \
