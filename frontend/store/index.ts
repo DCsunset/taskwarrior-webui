@@ -12,7 +12,8 @@ export const state = () => ({
 	settings: {
 		dark: false,
 		autoRefresh: '5', // in minutes
-		autoSync: '0' // in minutes
+		autoSync: '0', // in minutes
+		mobilelist: true
 	}
 });
 
