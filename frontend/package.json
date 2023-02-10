@@ -3,11 +3,11 @@
   "version": "1.0.0",
   "private": true,
   "scripts": {
-    "dev": "nuxt",
-    "build": "nuxt-ts build",
-    "start": "nuxt-ts start",
-    "export": "nuxt-ts export",
-    "serve": "nuxt-ts serve",
+    "dev": "NODE_OPTIONS=--openssl-legacy-provider nuxt",
+    "build": "NODE_OPTIONS=--openssl-legacy-provider nuxt-ts build",
+    "start": "NODE_OPTIONS=--openssl-legacy-provider nuxt-ts start",
+    "export": "NODE_OPTIONS=--openssl-legacy-provider nuxt-ts export",
+    "serve": "NODE_OPTIONS=--openssl-legacy-provider nuxt-ts serve",
     "lint": "eslint --fix --ext .ts,.js,.vue ."
   },
   "dependencies": {
