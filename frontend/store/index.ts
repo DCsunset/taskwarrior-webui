@@ -13,7 +13,8 @@ export const state = () => ({
 		dark: false,
 		autoRefresh: '5', // in minutes
 		autoSync: '0' // in minutes
-	}
+	},
+	hiddenColumns: [] as string[]
 });
 
 export type RootState = ReturnType<typeof state>;
@@ -32,6 +33,10 @@ export const mutations: MutationTree<RootState> = {
 
 	setTasks(state, tasks: Task[]) {
 		state.tasks = tasks;
+	},
+
+	setHiddenColumns(state, hiddenColumns) {
+		state.hiddenColumns = hiddenColumns
 	},
 
 	setNotification(state, notification) {
@@ -56,6 +61,18 @@ export const actions: ActionTree<RootState, RootState> = {
 	updateSettings(context, settings) {
 		context.commit('setSettings', settings);
 		localStorage.setItem('settings', JSON.stringify(settings));
+	},
+
+	fetchHiddenColumns(context) {
+		const columns = localStorage.getItem('hiddenColumns');
+		if (columns) {
+			context.commit('setHiddenColumns', JSON.parse(columns));
+		}
+	},
+
+	updateHiddenColumns(context, columns) {
+		context.commit('setHiddenColumns', columns);
+		localStorage.setItem('hiddenColumns', JSON.stringify(columns));
 	},
 
 	async fetchTasks(context) {
