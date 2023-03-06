@@ -7,7 +7,7 @@
 			@yes="confirmation.handler"
 		/>
 		<TaskDialog v-model="showTaskDialog" :task="currentTask || undefined" />
-
+		<ColumnDialog v-model="showColumnDialog" :active-columns="headers"/>
 		<v-row class="px-4 pt-4">
 			<v-btn-toggle v-model="status" mandatory background-color="rgba(0, 0, 0, 0)">
 			<v-row class="pa-3">
@@ -40,7 +40,7 @@
   <v-row class="px-4 pt-4">
 		<v-data-table
 			:items="classifiedTasks[status]"
-			:headers="headers"
+			:headers="filteredHeaders"
 			show-select
 			item-key="uuid"
 			:item-class="rowClass"
@@ -109,6 +109,16 @@
 							@click="newTask"
 						>
 							<v-icon>mdi-plus</v-icon>
+						</v-btn>
+						<v-btn
+							class="primary ml-1"
+							fab
+							dark
+							small
+							title="Configure Columns"
+							@click="showColumnDialog = true"
+						>
+							<v-icon>mdi-cogs</v-icon>
 						</v-btn>
 					</div>
 				</v-row>
@@ -193,6 +203,7 @@ import { Task } from 'taskwarrior-lib';
 import _ from 'lodash';
 import TaskDialog from '../components/TaskDialog.vue';
 import ConfirmationDialog from '../components/ConfirmationDialog.vue';
+import ColumnDialog from '../components/ColumnDialog.vue';
 import moment from 'moment';
 import urlRegex from 'url-regex-safe';
 import normalizeUrl from 'normalize-url';
@@ -292,6 +303,12 @@ export default defineComponent({
 			{ text: 'Urgency', value: 'urgency', sort: (a: number, b: number) => !(a > b) },
 			{ text: 'Actions', value: 'actions', sortable: false }
 		]);
+
+		const filteredHeaders = computed(()=>
+			headers.value.filter((v)=> !store.state.hiddenColumns.includes(v.value))
+		)
+
+		const showColumnDialog = ref(false);
 
 		const tempTasks: { [key: string]: ComputedRef<Task[]> } = {};
 		for (const status of allStatus) {
@@ -393,6 +410,7 @@ export default defineComponent({
 			linkify,
 			refresh,
 			headers,
+			filteredHeaders,
 			classifiedTasks,
 			status,
 			allStatus,
@@ -406,12 +424,14 @@ export default defineComponent({
 			restoreTasks,
 			showTaskDialog,
 			showConfirmationDialog,
+			showColumnDialog,
 			confirmation,
 			displayDate,
 			rowClass,
 
 			TaskDialog,
-			ConfirmationDialog
+			ConfirmationDialog,
+			ColumnDialog,
 		};
 	}
 });

@@ -60,6 +60,7 @@ export default defineComponent({
 		const context = useContext();
 		const store = useStore<typeof accessorType>();
 		store.dispatch('fetchSettings');
+		store.dispatch('fetchHiddenColumns');
 
 		context.$vuetify.theme.dark = store.state.settings.dark;
 
