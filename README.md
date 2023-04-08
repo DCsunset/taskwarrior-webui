@@ -39,6 +39,16 @@ docker run -d -p 8080:80 --name taskwarrior-webui \
 	dcsunset/taskwarrior-webui
 ```
 
+If your configuration file contains absolute path to your home directory like `/home/xxx/ca.cert.pem`,
+you may want to mount files to the same paths in the container using the following command:
+
+```sh
+docker run -d -p 8080:80 --name taskwarrior-webui \
+	-e TAKSRC=$HOME/.taskrc -e TASKDATA=$HOME/.task \
+	-v $HOME/.taskrc:$HOME/.taskrc -v $HOME/.task:$HOME/.task \
+	dcsunset/taskwarrior-webui
+```
+
 ## Configurations
 
 The following environment variables may be set:
