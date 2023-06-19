@@ -300,7 +300,7 @@ export default defineComponent({
 				: [{ text: 'Wait', value: 'wait' }]),
 			{ text: 'Until', value: 'until' },
 			{ text: 'Tags', value: 'tags' },
-			{ text: 'Urgency', value: 'urgency', sort: (a: number, b: number) => !(a > b) },
+			{ text: 'Urgency', value: 'urgency', sort: (a: number, b: number) => b - a },
 			{ text: 'Actions', value: 'actions', sortable: false }
 		]);
 
