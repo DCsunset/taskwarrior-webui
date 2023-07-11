@@ -38,6 +38,16 @@ docker run -d -p 8080:80 --name taskwarrior-webui \
 	-v $HOME/.taskrc:/.taskrc -v $HOME/.task:/.task \
 	dcsunset/taskwarrior-webui
 ```
+Enter `http://0.0.0.0:8080`.
+
+If you want to use already existing taskwarrior data, use `:z` or `:Z` labels. See
+[here](https://stackoverflow.com/questions/35218194/what-is-z-flag-in-docker-containers-volumes-from-option/35222815#35222815).
+```
+# e.g.
+docker run -d -p 8080:80 --name taskwarrior-webui \
+	-v $HOME/.taskrc:/.taskrc:z -v $HOME/.task:/.task:z \
+	dcsunset/taskwarrior-webui
+```
 
 If your configuration file contains absolute path to your home directory like `/home/xxx/ca.cert.pem`,
 you may want to mount files to the same paths in the container using the following command:
