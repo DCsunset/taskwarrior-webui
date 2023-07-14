@@ -38,7 +38,7 @@ docker run -d -p 8080:80 --name taskwarrior-webui \
 	-v $HOME/.taskrc:/.taskrc -v $HOME/.task:/.task \
 	dcsunset/taskwarrior-webui
 ```
-Enter `http://0.0.0.0:8080`.
+Enter `http://127.0.0.1:8080` (replace `127.0.0.1` with your ip address if running on a remote server).
 
 If you want to use already existing taskwarrior data, use `:z` or `:Z` labels. See
 [here](https://stackoverflow.com/questions/35218194/what-is-z-flag-in-docker-containers-volumes-from-option/35222815#35222815).
