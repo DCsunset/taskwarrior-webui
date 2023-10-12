@@ -101,6 +101,18 @@
 						>
 							<v-icon>mdi-refresh</v-icon>
 						</v-btn>
+
+						<v-btn
+								v-if="showSyncBtn"
+								class="green ml-1"
+								fab
+								dark
+								title="Sync Tasks"
+								@click="syncTasks"
+							>
+								<v-icon>mdi-sync</v-icon>
+						</v-btn>
+
 						<v-btn
 							class="primary ml-1"
 							fab
@@ -341,6 +353,26 @@ export default defineComponent({
 
 		const showTaskDialog = ref(false);
 		const currentTask: Ref<Task | null> = ref(null);
+
+		const showSyncBtn = computed(() => {
+			return store.state.settings.autoSync !== '0';
+		});
+
+		const syncTasks = async () => {
+			try {
+				await store.dispatch('syncTasks');
+				store.commit('setNotification', {
+					color: 'success',
+					text: 'Successfully synced tasks.'
+				});
+			} catch (error) {
+				store.commit('setNotification', {
+					color: 'error',
+					text: 'Failed to sync tasks.'
+				});
+			}
+		};
+
 		const newTask = () => {
 			showTaskDialog.value = true;
 			currentTask.value = null;
@@ -416,6 +448,8 @@ export default defineComponent({
 			allStatus,
 			statusIcons,
 			selected,
+			showSyncBtn,
+			syncTasks,
 			newTask,
 			currentTask,
 			editTask,
