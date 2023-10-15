@@ -20,7 +20,7 @@
     "lodash": "^4.17.20",
     "moment": "^2.29.4",
     "normalize-url": "4.5.1",
-    "nuxt": "^2.14.7",
+    "nuxt": "^2.16.0",
     "nuxt-typed-vuex": "^0.1.22",
     "typeface-open-sans": "1.1.13",
     "url-regex-safe": "^2.0.2",
