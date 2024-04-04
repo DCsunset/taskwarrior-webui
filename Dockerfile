@@ -18,13 +18,13 @@ ENV TASKDATA="/.task"
 ENV NODE_OPTIONS="--openssl-legacy-provider"
 
 # Frontend
-RUN cd /src/frontend && npm install \
+RUN cd /src/frontend && npm ci \
 	&& npm run build && npm run export \
 	&& cp -r /src/frontend/dist /static \
 	&& rm -r /src/frontend
 
 # Backend
-RUN cd /src/backend && npm install \
+RUN cd /src/backend && npm ci \
 	&& npm run build \
 	&& npm prune --production \
 	&& rm -r /src/backend/src
