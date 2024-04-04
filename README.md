@@ -131,6 +131,36 @@ first you need to follow the [instructions](https://taskwarrior.org/docs/taskser
 to configure both the taskserver and client manually until the `task sync` can be executed successfully.
 Then remember to map the client configurations (`.taskrc` and `.task`) into the container.
 
+### Authentication
+
+Though authentication is not supported directly,
+it is possible to use basic auth by configuring nginx (or you can even use your own reverse-proxy to do it).
+
+For example, you can modify the file `nginx/server.conf` as below:
+
+```nginx
+server {
+  listen 80;
+  listen [::]:80;
+
+  # add auth
+  auth_basic           "Protected page";
+  auth_basic_user_file /etc/htpasswd;
+
+  # remaining part unchanged
+  ...
+}
+```
+
+Then mount the file and `htpasswd` file:
+
+```shell
+docker run -d -p 8080:80 --name taskwarrior-webui \
+	-v $HOME/.taskrc:/.taskrc -v $HOME/.task:/.task \
+    -v $PWD/server.conf:/etc/nginx/conf.d/default.conf \
+    -v $PWD/htpasswd:/etc/htpasswd \
+	dcsunset/taskwarrior-webui
+```
 
 ## License
 
