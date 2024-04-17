@@ -54,7 +54,7 @@ you may want to mount files to the same paths in the container using the followi
 
 ```sh
 docker run -d -p 8080:80 --name taskwarrior-webui \
-	-e TAKSRC=$HOME/.taskrc -e TASKDATA=$HOME/.task \
+	-e TASKRC=$HOME/.taskrc -e TASKDATA=$HOME/.task \
 	-v $HOME/.taskrc:$HOME/.taskrc -v $HOME/.task:$HOME/.task \
 	dcsunset/taskwarrior-webui
 ```
