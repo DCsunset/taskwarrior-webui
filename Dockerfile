@@ -1,9 +1,7 @@
 FROM alpine:latest
 
-# Debug
-# RUN sed -i 's/dl-cdn.alpinelinux.org/mirrors.tuna.tsinghua.edu.cn/g' /etc/apk/repositories
-
-RUN apk --no-cache add nodejs npm nginx task python3 build-base
+RUN echo "http://dl-cdn.alpinelinux.org/alpine/edge/testing" >> /etc/apk/repositories
+RUN apk --no-cache add nodejs npm nginx task3 python3 build-base
 
 COPY ./frontend /src/frontend
 COPY ./backend /src/backend
