@@ -28,6 +28,9 @@ Responsive Web UI for Taskwarrior based on Vue.js and Koa.js.
 First pull the docker image:
 
 ```
+# For taskwarrior 3
+docker pull dcsunset/taskwarrior-webui:3
+# For taskwarrior 2
 docker pull dcsunset/taskwarrior-webui
 ```
 
@@ -36,7 +39,7 @@ Then run it with the command:
 ```
 docker run -d -p 8080:80 --name taskwarrior-webui \
 	-v $HOME/.taskrc:/.taskrc -v $HOME/.task:/.task \
-	dcsunset/taskwarrior-webui
+	dcsunset/taskwarrior-webui:3
 ```
 Enter `http://127.0.0.1:8080` (replace `127.0.0.1` with your ip address if running on a remote server).
 
