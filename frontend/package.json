@@ -23,7 +23,7 @@
     "nuxt": "^2.14.7",
     "nuxt-typed-vuex": "^0.1.22",
     "typeface-open-sans": "1.1.13",
-    "url-regex-safe": "^2.0.2",
+    "url-regex-safe": "^4.0.0",
     "vue-server-renderer": "^2.6.14",
     "vue-template-compiler": "^2.6.14"
   },
