@@ -26,8 +26,9 @@ Responsive Web UI for Taskwarrior based on Vue.js and Koa.js.
 ### Using docker (recommended)
 
 First pull the docker image:
-
-```
+(Note that taskwarrior v2 and v3 are not compatible with each other.
+Choose based on your current data version.)
+```sh
 # For taskwarrior 3
 docker pull dcsunset/taskwarrior-webui:3
 # For taskwarrior 2
@@ -35,15 +36,15 @@ docker pull dcsunset/taskwarrior-webui
 ```
 
 Then run it with the command:
-
-```
+```sh
 docker run -d -p 8080:80 --name taskwarrior-webui \
 	-v $HOME/.taskrc:/.taskrc -v $HOME/.task:/.task \
 	dcsunset/taskwarrior-webui:3
 ```
-Enter `http://127.0.0.1:8080` (replace `127.0.0.1` with your ip address if running on a remote server).
 
-If you want to use already existing taskwarrior data, use `:z` or `:Z` labels. See
+Finally, open `http://127.0.0.1:8080` with your browser (replace `127.0.0.1` with your ip address if running on a remote server).
+
+If you want to use already existing taskwarrior data in another container, use `:z` or `:Z` labels. See
 [here](https://stackoverflow.com/questions/35218194/what-is-z-flag-in-docker-containers-volumes-from-option/35222815#35222815).
 ```
 # e.g.
