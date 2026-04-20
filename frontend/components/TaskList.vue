@@ -8,7 +8,7 @@
 		/>
 		<TaskDialog v-model="showTaskDialog" :task="currentTask || undefined" />
 		<ColumnDialog v-model="showColumnDialog" :active-columns="headers"/>
-		<v-row class="px-4 pt-4">
+		<v-row class="px-4 pt-4 align-center">
 			<v-btn-toggle v-model="status" mandatory background-color="rgba(0, 0, 0, 0)">
 			<v-row class="pa-3">
 				<v-btn
@@ -35,6 +35,32 @@
 				</v-btn>
 			</v-row>
 		</v-btn-toggle>
+		<v-spacer />
+		<v-btn
+			v-if="!searchOpen"
+			icon
+			class="mr-4"
+			title="Buscar (/ o Ctrl+K)"
+			@click="openSearch"
+		>
+			<v-icon>mdi-magnify</v-icon>
+		</v-btn>
+		<v-text-field
+			v-else
+			ref="searchInput"
+			v-model="search"
+			prepend-inner-icon="mdi-magnify"
+			placeholder="Buscar tareas…"
+			outlined
+			dense
+			clearable
+			hide-details
+			single-line
+			style="max-width: 320px"
+			class="mr-4"
+			@blur="handleSearchBlur"
+			@keydown.esc="closeSearch"
+		/>
   </v-row>
 
   <v-row class="px-4 pt-4">
@@ -210,7 +236,7 @@
 </template>
 
 <script lang="ts">
-import { defineComponent, useStore, computed, reactive, ref, ComputedRef, Ref } from '@nuxtjs/composition-api';
+import { defineComponent, useStore, computed, reactive, ref, watch, nextTick, onMounted, onBeforeUnmount, ComputedRef, Ref } from '@nuxtjs/composition-api';
 import { Task } from 'taskwarrior-lib';
 import _ from 'lodash';
 import TaskDialog from '../components/TaskDialog.vue';
@@ -322,21 +348,73 @@ export default defineComponent({
 
 		const showColumnDialog = ref(false);
 
+		const search = ref('');
+		const searchOpen = ref(false);
+		const searchInput: Ref<any> = ref(null);
+
+		watch(search, () => {
+			selected.value = [];
+		});
+
+		const openSearch = async () => {
+			searchOpen.value = true;
+			await nextTick();
+			searchInput.value?.focus();
+		};
+
+		const closeSearch = () => {
+			search.value = '';
+			searchOpen.value = false;
+		};
+
+		const handleSearchBlur = () => {
+			if (!search.value) {
+				searchOpen.value = false;
+			}
+		};
+
+		const onGlobalKeydown = (e: KeyboardEvent) => {
+			const isCtrlK = (e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'k';
+			const isSlash = e.key === '/';
+			if (!isCtrlK && !isSlash) return;
+			if (isSlash) {
+				const t = e.target as HTMLElement | null;
+				if (t && (t.tagName === 'INPUT' || t.tagName === 'TEXTAREA' || t.isContentEditable)) return;
+			}
+			e.preventDefault();
+			openSearch();
+		};
+
+		onMounted(() => window.addEventListener('keydown', onGlobalKeydown));
+		onBeforeUnmount(() => window.removeEventListener('keydown', onGlobalKeydown));
+
+		const matchesSearch = (task: Task, q: string) => {
+			if (!q) return true;
+			const needle = q.toLowerCase();
+			if (task.description?.toLowerCase().includes(needle)) return true;
+			if (task.project?.toLowerCase().includes(needle)) return true;
+			if (task.tags?.some(t => t.toLowerCase().includes(needle))) return true;
+			if (task.annotations?.some(a => a.description?.toLowerCase().includes(needle))) return true;
+			return false;
+		};
+
 		const tempTasks: { [key: string]: ComputedRef<Task[]> } = {};
 		for (const status of allStatus) {
-			tempTasks[status] = computed((): Task[] => props.tasks?.filter(task => {
-				if (status === "waiting" || status === "pending") {
-					const waiting = (task.wait && !expiredDate(task.wait))
-						|| (task.scheduled && futureDate(task.scheduled));
-					return task.status === "pending" && (status === "pending" ? !waiting : waiting);
-				}
-				else if (status === "pending") {
-					return task.status === "pending" && !(task.wait && !expiredDate(task.wait));
-				}
-				else {
-					return task.status === status;
-				}
-			}));
+			tempTasks[status] = computed((): Task[] => {
+				const q = search.value || '';
+				return props.tasks?.filter(task => {
+					let passStatus: boolean;
+					if (status === "waiting" || status === "pending") {
+						const waiting = (task.wait && !expiredDate(task.wait))
+							|| (task.scheduled && futureDate(task.scheduled));
+						passStatus = task.status === "pending" && (status === "pending" ? !waiting : !!waiting);
+					}
+					else {
+						passStatus = task.status === status;
+					}
+					return passStatus && matchesSearch(task, q);
+				});
+			});
 		}
 		const classifiedTasks = reactive(tempTasks);
 
@@ -459,6 +537,12 @@ export default defineComponent({
 			showTaskDialog,
 			showConfirmationDialog,
 			showColumnDialog,
+			search,
+			searchOpen,
+			searchInput,
+			openSearch,
+			closeSearch,
+			handleSearchBlur,
 			confirmation,
 			displayDate,
 			rowClass,
