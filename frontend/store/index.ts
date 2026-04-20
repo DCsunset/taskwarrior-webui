@@ -94,8 +94,9 @@ export const actions: ActionTree<RootState, RootState> = {
 		await context.dispatch('fetchTasks');
 	},
 
-	async syncTasks(_context) {
+	async syncTasks(context) {
 		await this.$axios.$post('/api/sync');
+		await context.dispatch('fetchTasks');
 	}
 };
 
