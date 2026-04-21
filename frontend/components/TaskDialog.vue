@@ -34,25 +34,27 @@
 						hint="Press tab or enter to add new tags"
 					/>
 					<v-row class="px-3">
-						<v-text-field
+						<DateTimeInput
 							class="mr-3"
 							v-model="formData.due"
 							:label="recur ? 'Due*' : 'Due'"
 							:rules="recur ? requiredRules : []"
 							:required="recur"
+							show-time
 						/>
-						<v-text-field
+						<DateTimeInput
 							v-model="formData.until"
 							label="Until"
 						/>
 					</v-row>
 					<v-row class="px-3">
-						<v-text-field
+						<DateTimeInput
 							class="mr-3"
 							v-model="formData.scheduled"
 							label="Scheduled"
+							show-time
 						/>
-						<v-text-field
+						<DateTimeInput
 							v-model="formData.wait"
 							label="Wait"
 						/>
@@ -132,7 +134,7 @@
 <script lang="ts">
 import { defineComponent, useStore, watch, computed, ref } from '@nuxtjs/composition-api';
 import { Task } from 'taskwarrior-lib';
-import { accessorType  } from "../store";
+import { accessorType } from '../store';
 
 export default defineComponent({
 	props: {
@@ -193,7 +195,7 @@ export default defineComponent({
 				(formRef.value as any).resetValidation();
 			}
 
-			addAnnotationDescription.value = "";
+			addAnnotationDescription.value = '';
 		};
 
 		watch(() => props.task, () => {
@@ -208,7 +210,7 @@ export default defineComponent({
 				description: addAnnotationDescription.value
 			});
 
-			addAnnotationDescription.value = "";
+			addAnnotationDescription.value = '';
 		};
 
 		const closeDialog = () => {
