@@ -70,7 +70,7 @@
 
 <script lang="ts">
 import { defineComponent, ref, watch, nextTick } from '@nuxtjs/composition-api';
-import moment from 'moment';
+import { parseDateValue, combineDateTime } from '../utils/dateParse';
 
 export default defineComponent({
 	props: {
@@ -91,36 +91,21 @@ export default defineComponent({
 			const el = timeInputRef.value;
 			if (el) {
 				el.focus();
-				if (typeof el.showPicker === 'function') {
+				const picker = el as HTMLInputElement & { showPicker?: () => void };
+				if (typeof picker.showPicker === 'function') {
 					try {
-						el.showPicker();
+						picker.showPicker();
 					}
 					catch (_) { /* ignore */ }
 				}
 			}
 		};
 
-		const parseDate = (str: string): moment.Moment | null => {
-			if (!str) return null;
-			const m = moment(str, [
-				moment.ISO_8601,
-				'YYYYMMDD[T]HHmmss[Z]',
-				'YYYYMMDD[T]HHmmss',
-				'YYYY-MM-DD HH:mm:ss',
-				'YYYY-MM-DD HH:mm',
-				'YYYY-MM-DD',
-				'YYYY/MM/DD',
-				'DD/MM/YYYY',
-				'MM/DD/YYYY'
-			], true);
-			return m.isValid() ? m : null;
-		};
-
 		const draftDate = ref<string | null>(null);
 		const draftTime = ref<string>('');
 
 		const syncDraft = () => {
-			const parsed = parseDate(props.value);
+			const parsed = parseDateValue(props.value);
 			if (parsed) {
 				draftDate.value = parsed.format('YYYY-MM-DD');
 				const t = parsed.format('HH:mm');
@@ -151,7 +136,7 @@ export default defineComponent({
 			}
 			let out = draftDate.value;
 			if (props.showTime && draftTime.value) {
-				out = `${draftDate.value}T${draftTime.value}:00`;
+				out = combineDateTime(draftDate.value, draftTime.value);
 			}
 			ctx.emit('input', out);
 			menu.value = false;
