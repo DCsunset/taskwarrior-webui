@@ -93,7 +93,7 @@ export default defineComponent({
 		const allModes = ['Tasks', 'Projects'];
 
 		const project = ref('');
-		const projects: ComputedRef<string[]> = computed(() => store.getters.projects);
+		const projects: ComputedRef<string[]> = computed(() => store.getters.activeProjects);
 		watch(projects, () => {
 			if (projects.value.includes(project.value))
 				return;

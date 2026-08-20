@@ -19,8 +19,17 @@ export const state = () => ({
 
 export type RootState = ReturnType<typeof state>;
 
+const projectsFromTasks = (tasks: Task[]) => Array.from(new Set(
+	tasks
+		.map(task => task.project)
+		.filter((project): project is string => project !== undefined)
+));
+
 export const getters: GetterTree<RootState, RootState> = {
-	projects: state => state.tasks.map(task => task.project).filter(p => p !== undefined),
+	projects: state => projectsFromTasks(state.tasks),
+	activeProjects: state => projectsFromTasks(
+		state.tasks.filter(task => task.status !== 'completed' && task.status !== 'deleted')
+	),
 	tags: state => state.tasks.reduce((tags: string[], task) => {
 		return task.tags ? tags.concat(task.tags) : tags;
 	}, [])
