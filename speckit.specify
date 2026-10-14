@@ -16,8 +16,28 @@ Core Features:
    - Card inline quick actions (start/stop, done, edit, block, delete).
 7. Reporting Module: Project progress tracking rings and burndown charts.
 8. Enhanced Usability: Tag text copy button, customizable columns/colors, and theme toggling (Light/Dark/Auto).
+9. Global Filter-as-you-Type Search & Deep-Linking Query Sync:
+   - Top-bar search box embedded within the shared controls bar of `pages/index.vue`, applying across all active views (Tasks, Kanban).
+   - Real-time "filter-as-you-type" matching task descriptions/names case-insensitively with instant reactivity.
+   - Bidirectional URL query synchronization with `?search=<query>` (300ms debounce when typing, omitted when empty).
+10. Multi-Toggle Task Status Filtering (Tasks View):
+   - Status filters (`pending`, `waiting`, `completed`, `deleted`, `recurring`) operate as independent toggle buttons rather than mutually exclusive choices.
+   - Dynamic task aggregation (`displayedTasks`) matching any active status.
+   - Adaptive table columns (rendering both `Due` and `Wait` when both `pending` and `waiting` statuses are selected).
+   - Bidirectional URL query parameter synchronization with `?status=<comma-separated>` (e.g. `?status=pending,waiting`, `?status=completed`, `?status=none`; clean default when only `pending`).
+   - Defensive action buttons and batch operations scoped to individual `item.status`.
+   - Status isolation and URL preservation: The `?status=` query parameter has no filtering effect in the Kanban view (which displays tasks across all lifecycle stages: To Do, In Progress, Waiting, Done), but is never erased or overwritten during view mode transitions, preserving the user's status filter state when returning to the Tasks view.
+11. Gantt / Timeline Sequencing & Calendarless Flow View:
+   - Horizontal sequencing: uses start date; falls back to due date; falls back to latest precedent task completion/end; falls back to today. Task length spans start through due date inclusive (or 1 day minimum).
+   - Vertical task ordering: Priority (H > M > L > none), Urgency, dependent task count, alphabetical description.
+   - Non-overlapping orthogonal dependency arrow routing avoiding task card intersections and vertical line collisions.
+   - Multi-scale timeframes (Day, Week, Month) with fluid column spacing, horizontal scrolling, and removal of unpopulated empty intervals.
+   - "Calendarless" (Topology / Flow) view displaying topological sequence starting from column 0 without date columns.
 
 ## User Stories
-As a Taskwarrior user, I want a modern web interface that combines full keyboard shortcuts, active task timer tracking, undo previews, and custom query reports from webui1 with a responsive Vuetify UI.
-As a Taskwarrior user, I want a Kanban board view inspired by twkb so I can visually organize, drag-and-drop, and track tasks across To Do, In Progress, Waiting, and Done columns.
-As a developer, I want all these features cleanly integrated into the Koa backend and Vue.js frontend of pplupo/taskwarrior-webui.
+- As a Taskwarrior user, I want a modern web interface that combines full keyboard shortcuts, active task timer tracking, undo previews, and custom query reports from webui1 with a responsive Vuetify UI.
+- As a Taskwarrior user, I want a Kanban board view inspired by twkb so I can visually organize, drag-and-drop, and track tasks across To Do, In Progress, Waiting, and Done columns.
+- As a Taskwarrior user, I want a global search box that filters tasks as I type across both list and board views, and syncs to the URL query string (`?search=...`) so search states can be bookmarked and shared.
+- As a Taskwarrior user, I want the status filters in the Tasks list view to be independent toggles (e.g. view pending and waiting tasks simultaneously), persisted in the URL query string (`?status=...`).
+- As a Taskwarrior user, I want a Gantt and Calendarless flow timeline with deterministic task sequencing, priority/urgency vertical sorting, clean non-overlapping dependency arrows, and fluid horizontal scrolling.
+- As a developer, I want all these features cleanly integrated into the Koa backend and Vue.js frontend of pplupo/taskwarrior-webui.

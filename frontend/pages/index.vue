@@ -23,6 +23,17 @@
 				dense
 			/>
 
+			<v-text-field
+				class="mb-3 ml-3"
+				label="Search tasks..."
+				v-model="searchQuery"
+				prepend-inner-icon="mdi-magnify"
+				clearable
+				dense
+				hide-details
+				style="max-width: 220px"
+			/>
+
 			<v-spacer />
 			<v-select
 				class="mb-3 ml-3"
@@ -122,6 +133,30 @@ export default defineComponent({
 		const assignees = computed(() => store.getters.assignees);
 		const assigneeOptions = computed(() => ['(All Assignees)', '(Unassigned)', ...assignees.value]);
 
+		const searchQuery = ref((route.value.query.search as string) || '');
+
+		let searchDebounceTimer: any = null;
+		const updateSearchQueryParam = (newSearch: string) => {
+			if (searchDebounceTimer) clearTimeout(searchDebounceTimer);
+			searchDebounceTimer = setTimeout(() => {
+				const currentSearchInRoute = (route.value.query.search as string) || '';
+				const trimmed = (newSearch || '').trim();
+				if (currentSearchInRoute !== trimmed) {
+					const query: Record<string, string> = { ...(route.value.query as Record<string, string>) };
+					if (trimmed) {
+						query.search = trimmed;
+					} else {
+						delete query.search;
+					}
+					router.replace({ query }).catch(() => {});
+				}
+			}, 300);
+		};
+
+		watch(searchQuery, (newVal) => {
+			updateSearchQueryParam(newVal);
+		});
+
 		watch([mode, selectedProject, selectedAssignee], ([newMode, newProject, newAssignee]) => {
 			const query: Record<string, string> = { ...(route.value.query as Record<string, string>) };
 			if (newMode !== 'Tasks') query.mode = newMode;
@@ -132,6 +167,10 @@ export default defineComponent({
 
 			if (newAssignee !== '(All Assignees)') query.assignee = newAssignee;
 			else delete query.assignee;
+
+			const trimmedSearch = (searchQuery.value || '').trim();
+			if (trimmedSearch) query.search = trimmedSearch;
+			else delete query.search;
 
 			router.replace({ query }).catch(() => {});
 		});
@@ -145,6 +184,11 @@ export default defineComponent({
 
 			if (newQuery.assignee && newQuery.assignee !== selectedAssignee.value) selectedAssignee.value = newQuery.assignee as string;
 			if (!newQuery.assignee && selectedAssignee.value !== '(All Assignees)') selectedAssignee.value = '(All Assignees)';
+
+			const routeSearch = (newQuery.search as string) || '';
+			if (routeSearch !== (searchQuery.value || '').trim()) {
+				searchQuery.value = routeSearch;
+			}
 		}, { deep: true });
 
 		const allTasks: ComputedRef<Task[]> = computed(() => store.state.tasks);
@@ -165,6 +209,12 @@ export default defineComponent({
 				result = result.filter(t => !(t as any).assignee && !(t as any).assignees);
 			} else if (selectedAssignee.value && selectedAssignee.value !== '(All Assignees)') {
 				result = result.filter(t => (t as any).assignee === selectedAssignee.value || (t as any).assignees === selectedAssignee.value);
+			}
+
+			// Search filter
+			const search = (searchQuery.value || '').trim().toLowerCase();
+			if (search) {
+				result = result.filter(t => (t.description || '').toLowerCase().includes(search));
 			}
 
 			return result;
@@ -266,6 +316,7 @@ export default defineComponent({
 			projectOptions,
 			selectedAssignee,
 			assigneeOptions,
+			searchQuery,
 			filteredTasks,
 			activeTaskUuid,
 			showTaskDialog,
