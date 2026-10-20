@@ -1,0 +1,31 @@
+# Implementation Plan - Taskwarrior WebUI Enhancement
+
+## Architecture & Tech Stack
+- **Target Fork**: https://github.com/pplupo/taskwarrior-webui
+- **Backend**: Node.js, Koa.js, TypeScript, taskwarrior-lib CLI wrapper.
+- **Frontend**: Vue 2 (Composition API), Nuxt.js, Vuetify (Material Design), Vuex (typed-vuex).
+
+## Proposed Architectural Modules
+
+### 1. Backend Extensions (`backend/src/`)
+- `GET /api/tasks/active`: Query active task status.
+- `POST /api/tasks/:uuid/start` & `POST /api/tasks/:uuid/stop`: Direct timer management.
+- `POST /api/tasks/:uuid/annotate` & `DELETE /api/tasks/:uuid/annotate`: Annotation management.
+- `POST /api/tasks/undo` & `GET /api/tasks/undo/preview`: Undo operations preview and execution.
+- `GET /api/config/queries`: Custom queries loader.
+- `GET /api/reports/burndown` & `GET /api/reports/projects`: Progress metrics.
+
+### 2. Frontend Components & Store (`frontend/`)
+- Store additions: `activeTask`, `customQueries`, `undoPreview`, `activeViewMode`, `mnemonicsMap`.
+- Keyboard & Mnemonic Engine (`plugins/hotkeys.ts`): Shortcut handlers (`Ctrl+Shift+K`, `n`, `t`, `q`, `u`, `s`) with visual red-box overlays.
+- Kanban View (`components/KanbanBoard.vue`, `components/KanbanCard.vue`): 4-column drag-and-drop layout (To Do, In Progress, Waiting, Done).
+- Widgets (`components/ActiveTaskBar.vue`, `components/UndoDialog.vue`, `components/CustomQueryBar.vue`, `components/ReportsView.vue`).
+- Global Controls & Live Search (`pages/index.vue`): Top-bar search text field with 300ms debounced `?search=` synchronization, view switcher (`mode`), project and assignee filtering applied to `filteredTasks`.
+- Multi-Toggle Task List (`components/TaskList.vue`): Independent status button toggles (`v-btn-toggle multiple`), aggregated task display (`displayedTasks`), dynamic column headers (`Due`, `Wait`, `Recur`), and `?status=` query parameter synchronization (preserved across view mode transitions and strictly ignored by Kanban view).
+- Gantt & Timeline Engine (`components/GanttChart.vue`): Start/due date resolution, priority/urgency vertical sorting, non-intersecting orthogonal SVG arrows, fluid Day/Week/Month horizontal scrolling, and Calendarless topological flow view.
+
+## Verification Strategy
+- Backend API integration testing for timer and undo endpoints.
+- Component rendering tests for Kanban board drag-and-drop.
+- Headless browser automated tests (via Marionette/WebDriver) for query parameter synchronization (`search`, `status`, `mode`, `project`, `assignee`) and live filter-as-you-type reactivity.
+- E2E keyboard shortcut validation.

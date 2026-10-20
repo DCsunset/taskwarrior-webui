@@ -6,8 +6,18 @@
 		@keydown.esc="closeDialog"
 	>
 		<v-card>
-			<v-card-title>
-				{{ task ? 'Edit Task' : 'New Task' }}
+			<v-card-title class="d-flex align-center">
+				<span>{{ task ? 'Edit Task' : 'New Task' }}</span>
+				<v-spacer />
+				<template v-if="task">
+					<v-chip small color="primary" class="mr-2 font-weight-bold" outlined>
+						<span v-if="task.id !== 0 && task.id !== undefined && task.id !== null">#{{ task.id }}</span>
+						<span v-else>#-</span>
+					</v-chip>
+					<v-chip small color="grey" dark outlined :title="task.uuid">
+						{{ task.uuid ? task.uuid.substring(0, 8) : '' }}
+					</v-chip>
+				</template>
 			</v-card-title>
 			<v-card-text>
 				<v-form ref="formRef" lazy-validation>
@@ -23,6 +33,30 @@
 						:items="projects"
 						hide-selected
 						label="Project"
+					/>
+					<v-combobox
+						v-model="formData.assignee"
+						:items="assignees"
+						hide-selected
+						label="Assignee"
+					/>
+					<v-combobox
+						v-model="formData.depends"
+						:items="availableTaskOptions"
+						hide-selected
+						small-chips
+						multiple
+						label="Dependencies (Blocked by)"
+						hint="Select tasks this task depends on"
+					/>
+					<v-combobox
+						v-model="formData.dependents"
+						:items="availableTaskOptions"
+						hide-selected
+						small-chips
+						multiple
+						label="Dependents (Blocking)"
+						hint="Select tasks that depend on this task"
 					/>
 					<v-combobox
 						v-model="formData.tags"
@@ -81,6 +115,14 @@
 						/>
 					</v-radio-group>
 
+					<v-text-field
+						v-model="formData.customCommand"
+						label="Free-form Taskwarrior Modifiers"
+						placeholder="e.g. depends:123 priority:H due:tomorrow"
+						hint="Pass direct task modifier command fragments"
+						persistent-hint
+						class="mb-3"
+					/>
 					<v-list subheader dense flat>
 						<v-subheader>Annotations</v-subheader>
 						<v-list-item>
@@ -147,6 +189,7 @@ export default defineComponent({
 
 		const projects = computed(() => store.getters.projects);
 		const tags = computed(() => store.getters.tags);
+		const assignees = computed(() => store.getters.assignees);
 
 		const showDialog = computed({
 			get: () => props.value,
@@ -159,18 +202,80 @@ export default defineComponent({
 
 		const addAnnotationDescription = ref('');
 
+		const allTasks = computed(() => store.state.tasks || []);
+
+		const availableTaskOptions = computed(() => {
+			return allTasks.value
+				.filter(t => !props.task || t.uuid !== props.task.uuid)
+				.map(t => {
+					const idStr = (t.id !== undefined && t.id !== null && t.id !== 0) ? `#${t.id}` : (t.uuid ? t.uuid.substring(0, 8) : '');
+					return `${idStr}: ${t.description}`;
+				});
+		});
+
+		const parseTaskRefToUuid = (refStr: string): string => {
+			const trimmed = refStr.trim();
+			// Match #id or uuid or id: description format
+			const idMatch = trimmed.match(/^#?(\d+)/);
+			if (idMatch) {
+				const numericId = parseInt(idMatch[1], 10);
+				const found = allTasks.value.find(t => t.id === numericId);
+				if (found && found.uuid) return found.uuid;
+			}
+			const uuidMatch = trimmed.match(/([a-f0-9]{8}-(?:[a-f0-9]{4}-){3}[a-f0-9]{12})/i) || trimmed.match(/^([a-f0-9]{8})/i);
+			if (uuidMatch) {
+				const sub = uuidMatch[1].toLowerCase();
+				const found = allTasks.value.find(t => t.uuid && t.uuid.toLowerCase().startsWith(sub));
+				if (found && found.uuid) return found.uuid;
+			}
+			return trimmed;
+		};
+
+		const getInitialDepends = (): string[] => {
+			if (!props.task || !props.task.depends) return [];
+			const rawList = Array.isArray(props.task.depends) ? props.task.depends : String(props.task.depends).split(',').map(s => s.trim());
+			return rawList.map(dep => {
+				const found = allTasks.value.find(t => t.uuid === dep || (t.uuid && t.uuid.startsWith(dep)));
+				if (found) {
+					const idStr = (found.id !== undefined && found.id !== null && found.id !== 0) ? `#${found.id}` : (found.uuid ? found.uuid.substring(0, 8) : '');
+					return `${idStr}: ${found.description}`;
+				}
+				return dep;
+			});
+		};
+
+		const getInitialDependents = (): string[] => {
+			if (!props.task || !props.task.uuid) return [];
+			const currentUuid = props.task.uuid;
+			const dependents: string[] = [];
+			for (const t of allTasks.value) {
+				if (t.depends) {
+					const rawList = Array.isArray(t.depends) ? t.depends : String(t.depends).split(',').map(s => s.trim());
+					if (rawList.includes(currentUuid)) {
+						const idStr = (t.id !== undefined && t.id !== null && t.id !== 0) ? `#${t.id}` : (t.uuid ? t.uuid.substring(0, 8) : '');
+						dependents.push(`${idStr}: ${t.description}`);
+					}
+				}
+			}
+			return dependents;
+		};
+
 		const recur = ref(Boolean(props.task?.recur));
 		const formData = ref({
 			description: '',
 			project: '',
+			assignee: (props.task as any)?.assignee || (props.task as any)?.assignees || '',
 			scheduled: '',
 			due: '',
 			until: '',
 			wait: '',
 			tags: [] as string[],
+			depends: getInitialDepends(),
+			dependents: getInitialDependents(),
 			annotations: [] as {entry: string; description: string}[],
 			priority: 'N',
 			recur: '',
+			customCommand: '',
 			...props.task
 		});
 
@@ -178,14 +283,18 @@ export default defineComponent({
 			formData.value = {
 				description: '',
 				project: '',
+				assignee: (props.task as any)?.assignee || (props.task as any)?.assignees || '',
 				scheduled: '',
 				due: '',
 				until: '',
 				wait: '',
 				tags: [] as string[],
+				depends: getInitialDepends(),
+				dependents: getInitialDependents(),
 				annotations: [] as {entry: string; description: string}[],
 				priority: 'N',
 				recur: '',
+				customCommand: '',
 				...props.task
 			};
 			recur.value = Boolean(props.task?.recur);
@@ -218,8 +327,11 @@ export default defineComponent({
 		const submit = async () => {
 			const valid = (formRef.value as any).validate();
 			if (valid) {
-				await store.dispatch('updateTasks', [{
+				const dependsUuids = (formData.value.depends || []).map(parseTaskRefToUuid).filter(Boolean);
+
+				const taskPayload = {
 					...formData.value,
+					depends: dependsUuids.length > 0 ? dependsUuids.join(',') : undefined,
 					annotations: formData.value.annotations || [],
 					project: formData.value.project || undefined,
 					scheduled: formData.value.scheduled || undefined,
@@ -228,7 +340,56 @@ export default defineComponent({
 					wait: formData.value.wait || undefined,
 					priority: formData.value.priority === 'N' ? undefined : formData.value.priority,
 					recur: recur.value ? formData.value.recur : undefined
-				}]);
+				};
+				delete (taskPayload as any).dependents;
+
+				await store.dispatch('updateTasks', [taskPayload]);
+
+				// Handle dependents update (tasks that list this task in their `depends`)
+				if (props.task?.uuid) {
+					const currentUuid = props.task.uuid;
+					const newDependentUuids = new Set((formData.value.dependents || []).map(parseTaskRefToUuid).filter(Boolean));
+					const initialDependentUuids = new Set(getInitialDependents().map(parseTaskRefToUuid));
+
+					// Add dependency to tasks newly added as dependents
+					for (const depUuid of newDependentUuids) {
+						if (!initialDependentUuids.has(depUuid)) {
+							try {
+								await (store as any).$axios.$post('/api/tasks/' + depUuid + '/modify', {
+									command: `depends:${currentUuid}`
+								});
+							} catch (e) {
+								console.error(`Error adding dependency to task ${depUuid}`, e);
+							}
+						}
+					}
+
+					// Remove dependency from tasks removed as dependents
+					for (const depUuid of initialDependentUuids) {
+						if (!newDependentUuids.has(depUuid)) {
+							try {
+								await (store as any).$axios.$post('/api/tasks/' + depUuid + '/modify', {
+									command: `depends:-${currentUuid}`
+								});
+							} catch (e) {
+								console.error(`Error removing dependency from task ${depUuid}`, e);
+							}
+						}
+					}
+				}
+
+				if (formData.value.customCommand && props.task?.uuid) {
+					try {
+						await (store as any).$axios.$post('/api/tasks/' + props.task.uuid + '/modify', {
+							command: formData.value.customCommand
+						});
+					} catch (e) {
+						console.error('Custom modifier command error', e);
+					}
+				}
+
+				await store.dispatch('fetchTasks');
+
 				store.commit('setNotification', {
 					color: 'success',
 					text: `Successfully ${props.task ? 'update' : 'create'} the task`
@@ -244,11 +405,24 @@ export default defineComponent({
 			{ text: 'High', value: 'H' }
 		];
 
+		const getTaskId = (t: any) => {
+			if (t && t.id !== undefined && t.id !== null && t.id !== '') return t.id;
+			return '-';
+		};
+
+		const getShortUuid = (t: any) => {
+			return (t && t.uuid) ? t.uuid.substring(0, 8) : '';
+		};
+
 		return {
+			availableTaskOptions,
+			getTaskId,
+			getShortUuid,
 			requiredRules,
 			formRef,
 			tags,
 			projects,
+			assignees,
 			priorities,
 			recur,
 			formData,

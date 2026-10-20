@@ -9,37 +9,36 @@
 		<TaskDialog v-model="showTaskDialog" :task="currentTask || undefined" />
 		<ColumnDialog v-model="showColumnDialog" :active-columns="headers"/>
 		<v-row class="px-4 pt-4">
-			<v-btn-toggle v-model="status" mandatory background-color="rgba(0, 0, 0, 0)">
-			<v-row class="pa-3">
-				<v-btn
-					v-for="st in allStatus"
-					:key="st"
-					:value="st"
-					:color="st === status ? 'primary' : undefined"
-					text
-					@click="st !== status && (selected = [])"
-				>
-					<v-icon
-						class="mr-1"
-						:color="st === status ? 'primary' : undefined"
+			<v-btn-toggle v-model="selectedStatuses" multiple background-color="rgba(0, 0, 0, 0)">
+				<v-row class="pa-3">
+					<v-btn
+						v-for="st in allStatus"
+						:key="st"
+						:value="st"
+						:color="selectedStatuses.includes(st) ? 'primary' : undefined"
+						text
 					>
-						{{ statusIcons[st] }}
-					</v-icon>
-					{{ st }}
-					<v-badge
-						v-if="st === 'pending' && classifiedTasks[st].value && classifiedTasks[st].value.length"
-						:content="classifiedTasks[st].value.length"
-						:color="st === status ? 'primary' : 'grey'"
-						inline
-					/>
-				</v-btn>
-			</v-row>
-		</v-btn-toggle>
-  </v-row>
+						<v-icon
+							class="mr-1"
+							:color="selectedStatuses.includes(st) ? 'primary' : undefined"
+						>
+							{{ statusIcons[st] }}
+						</v-icon>
+						{{ st }}
+						<v-badge
+							v-if="st === 'pending' && ((classifiedTasks[st] && classifiedTasks[st].length) || (classifiedTasks[st] && classifiedTasks[st].value && classifiedTasks[st].value.length))"
+							:content="classifiedTasks[st].length || (classifiedTasks[st].value && classifiedTasks[st].value.length)"
+							:color="selectedStatuses.includes(st) ? 'primary' : 'grey'"
+							inline
+						/>
+					</v-btn>
+				</v-row>
+			</v-btn-toggle>
+		</v-row>
 
-  <v-row class="px-4 pt-4">
+		<v-row class="px-4 pt-4">
 		<v-data-table
-			:items="classifiedTasks[status]"
+			:items="displayedTasks"
 			:headers="filteredHeaders"
 			show-select
 			item-key="uuid"
@@ -53,7 +52,7 @@
 					<!-- Batch actions -->
 					<div class="pl-2 pt-2" v-show="selected.length">
 						<v-btn
-							v-show="status === 'pending'"
+							v-show="hasPendingSelected"
 							class="ma-1 green"
 							fab
 							small
@@ -64,7 +63,7 @@
 							<v-icon>mdi-check</v-icon>
 						</v-btn>
 						<v-btn
-							v-show="status === 'completed' || status === 'deleted'"
+							v-show="hasCompletedOrDeletedSelected"
 							class="ma-1"
 							color="primary"
 							fab
@@ -76,7 +75,7 @@
 							<v-icon>mdi-restore</v-icon>
 						</v-btn>
 						<v-btn
-							v-show="status !== 'deleted'"
+							v-show="hasNonDeletedSelected"
 							class="ma-1 red"
 							fab
 							dark
@@ -137,10 +136,37 @@
 			</template>
 
 			<template v-slot:item.description="{ item }">
+				<span v-if="taskMnemonics.has(item.uuid)" class="mnemonic-badge mr-2">{{ taskMnemonics.get(item.uuid) }}</span>
 				<span v-html="linkify(item.description)" />
 			</template>
 
-			<template v-if="status === 'waiting'" v-slot:item.wait="{ item }">
+			<template v-slot:item.id="{ item }">
+				<span class="font-weight-bold primary--text">
+					<span v-if="item.id !== 0 && item.id !== undefined && item.id !== null">#{{ item.id }}</span>
+					<span v-else>#-</span>
+				</span>
+				<span v-if="item.uuid" class="caption text--secondary ml-1">({{ item.uuid.substring(0, 8) }})</span>
+			</template>
+
+			<template v-slot:item.depends="{ item }">
+				<v-chip v-if="item.depends" x-small color="warning" dark :title="'Blocked by: ' + item.depends">
+					<v-icon left x-small>mdi-lock-outline</v-icon>{{ formatDepends(item.depends) }}
+				</v-chip>
+			</template>
+
+			<template v-slot:item.dependents="{ item }">
+				<v-chip v-if="getDependents(item)" x-small color="info" dark :title="'Blocking: ' + getDependents(item)">
+					<v-icon left x-small>mdi-account-arrow-right-outline</v-icon>{{ getDependents(item) }}
+				</v-chip>
+			</template>
+
+			<template v-slot:item.priority="{ item }">
+				<v-chip v-if="item.priority" x-small :color="getPriorityColor(item.priority)" dark class="priority-chip mr-1">
+					{{ item.priority }}
+				</v-chip>
+			</template>
+
+			<template v-slot:item.wait="{ item }">
 				{{ displayDate(item.wait) }}
 			</template>
 			<template v-slot:item.scheduled="{ item }">
@@ -158,8 +184,18 @@
 					v-for="tag in item.tags"
 					:key="tag"
 					small
+					class="mr-1 mb-1"
 				>
 					{{ tag }}
+					<v-icon
+						right
+						x-small
+						class="ml-1"
+						title="Copy tag"
+						@click.stop="copyTag(tag)"
+					>
+						mdi-content-copy
+					</v-icon>
 				</v-chip>
 			</template>
 
@@ -169,7 +205,18 @@
 
 			<template v-slot:item.actions="{ item }">
 				<v-icon
-					v-show="status === 'pending'"
+					v-show="item.status === 'pending'"
+					v-if="timewPresent"
+					size="20px"
+					class="ml-2"
+					:color="item.start || item.uuid === activeTaskUuid ? 'warning' : 'success'"
+					@click="toggleTimer(item)"
+					:title="item.start || item.uuid === activeTaskUuid ? 'Stop Timer' : 'Start Timer'"
+				>
+					{{ item.start || item.uuid === activeTaskUuid ? 'mdi-stop' : 'mdi-play' }}
+				</v-icon>
+				<v-icon
+					v-show="item.status === 'pending'"
 					size="20px"
 					class="ml-2"
 					@click="completeTasks([item])"
@@ -178,7 +225,7 @@
 					mdi-check
 				</v-icon>
 				<v-icon
-					v-show="status === 'completed' || status === 'deleted'"
+					v-show="item.status === 'completed' || item.status === 'deleted'"
 					size="20px"
 					class="ml-2"
 					@click="restoreTasks([item])"
@@ -195,7 +242,7 @@
 					mdi-pencil
 				</v-icon>
 				<v-icon
-					v-show="status !== 'deleted'"
+					v-show="item.status !== 'deleted'"
 					class="ml-2"
 					size="20px"
 					@click="deleteTasks([item])"
@@ -210,7 +257,7 @@
 </template>
 
 <script lang="ts">
-import { defineComponent, useStore, computed, reactive, ref, ComputedRef, Ref } from '@nuxtjs/composition-api';
+import { defineComponent, useStore, computed, reactive, ref, ComputedRef, Ref, useRoute, useRouter, watch } from '@nuxtjs/composition-api';
 import { Task } from 'taskwarrior-lib';
 import _ from 'lodash';
 import TaskDialog from '../components/TaskDialog.vue';
@@ -220,6 +267,7 @@ import moment from 'moment';
 import urlRegex from 'url-regex-safe';
 import normalizeUrl from 'normalize-url';
 import { accessorType  } from "../store";
+import { MnemonicGenerator } from '../utils/mnemonics';
 
 function displayDate(str?: string) {
 	if (!str)
@@ -262,6 +310,7 @@ function futureDate(str?: string) {
 }
 
 function linkify(text: string) {
+	if (!text) return '';
 	const regex = urlRegex();
 
 	let match;
@@ -269,7 +318,13 @@ function linkify(text: string) {
 	let result = '';
 	while ((match = regex.exec(text)) !== null) {
 		const str = text.substring(lastIndex, match.index);
-		const url = `<a target="_blank" href=${normalizeUrl(match[0])}>${match[0]}</a>`;
+		let href = match[0];
+		try {
+			href = normalizeUrl(match[0]);
+		} catch (e) {
+			// Fallback if normalizeUrl fails on pseudo-URL string
+		}
+		const url = `<a target="_blank" href="${href}">${match[0]}</a>`;
 		result = `${result}${str}${url}`;
 		lastIndex = match.index + match[0].length;
 	}
@@ -290,7 +345,9 @@ export default defineComponent({
 		const store = useStore<typeof accessorType>();
 		const selected = ref([] as Task[]);
 
-		const status = ref('pending');
+		const route = useRoute();
+		const router = useRouter();
+
 		const allStatus = ['pending', 'waiting', 'completed', 'deleted', 'recurring'];
 		const statusIcons: { [st: string]: string } = {
 			pending: 'mdi-clock-outline',
@@ -299,18 +356,62 @@ export default defineComponent({
 			deleted: 'mdi-delete',
 			recurring: 'mdi-restart'
 		};
+
+		const parseStatusQuery = (queryVal: any): string[] => {
+			if (queryVal === undefined || queryVal === null) {
+				return ['pending'];
+			}
+			const str = String(queryVal).trim().toLowerCase();
+			if (!str || str === 'none') {
+				return [];
+			}
+			if (str === 'all') {
+				return [...allStatus];
+			}
+			const parts = str.split(',').map(s => s.trim().toLowerCase()).filter(s => allStatus.includes(s));
+			return parts;
+		};
+
+		const selectedStatuses = ref<string[]>(parseStatusQuery(route.value.query.status));
+
+		const updateStatusQuery = (statuses: string[]) => {
+			const currentQueryStatus = (route.value.query.status as string) || '';
+			const sorted = [...statuses].sort((a, b) => allStatus.indexOf(a) - allStatus.indexOf(b));
+			let serialized = '';
+			if (sorted.length === 0) {
+				serialized = 'none';
+			} else {
+				serialized = sorted.join(',');
+			}
+
+			if (currentQueryStatus !== serialized) {
+				const query: Record<string, string> = { ...(route.value.query as Record<string, string>) };
+				if (serialized === 'pending' && !currentQueryStatus) {
+					return;
+				}
+				query.status = serialized;
+				router.replace({ query }).catch(() => {});
+			}
+		};
+
 		const headers = computed(() => [
+			{ text: 'ID', value: 'id' },
 			{ text: 'Project', value: 'project' },
 			{ text: 'Description', value: 'description' },
 			{ text: 'Priority', value: 'priority' },
 			{ text: 'Scheduled', value: 'scheduled' },
-			...(status.value === 'recurring'
+			...(selectedStatuses.value.includes('recurring')
 				? [{ text: 'Recur', value: 'recur' }]
 				: []),
-			...(status.value !== 'waiting'
+			...(selectedStatuses.value.length === 0 || selectedStatuses.value.some(s => s !== 'waiting')
 				? [{ text: 'Due', value: 'due' }]
-				: [{ text: 'Wait', value: 'wait' }]),
+				: []),
+			...(selectedStatuses.value.includes('waiting')
+				? [{ text: 'Wait', value: 'wait' }]
+				: []),
 			{ text: 'Until', value: 'until' },
+			{ text: 'Dependencies', value: 'depends' },
+			{ text: 'Dependents', value: 'dependents' },
 			{ text: 'Tags', value: 'tags' },
 			{ text: 'Urgency', value: 'urgency', sort: (a: number, b: number) => b - a },
 			{ text: 'Actions', value: 'actions', sortable: false }
@@ -339,6 +440,43 @@ export default defineComponent({
 			}));
 		}
 		const classifiedTasks = reactive(tempTasks);
+
+		const displayedTasks = computed((): Task[] => {
+			if (!props.tasks || !selectedStatuses.value || !selectedStatuses.value.length) return [];
+			const taskSet = new Set<string>();
+			const result: Task[] = [];
+			for (const st of selectedStatuses.value) {
+				const entry: any = classifiedTasks[st];
+				const list: Task[] = Array.isArray(entry) ? entry : (entry?.value || []);
+				for (const task of list) {
+					if (task.uuid && !taskSet.has(task.uuid)) {
+						taskSet.add(task.uuid);
+						result.push(task);
+					}
+				}
+			}
+			return result;
+		});
+
+		watch(selectedStatuses, (newStatuses) => {
+			if (selected.value.length) {
+				selected.value = selected.value.filter(task => displayedTasks.value.some(t => t.uuid === task.uuid));
+			}
+			updateStatusQuery(newStatuses);
+		});
+
+		watch(() => route.value.query.status, (newStatus) => {
+			const parsed = parseStatusQuery(newStatus);
+			const curSorted = [...selectedStatuses.value].sort().join(',');
+			const newSorted = [...parsed].sort().join(',');
+			if (curSorted !== newSorted) {
+				selectedStatuses.value = parsed;
+			}
+		});
+
+		const hasPendingSelected = computed(() => selected.value.some(t => t.status === 'pending'));
+		const hasCompletedOrDeletedSelected = computed(() => selected.value.some(t => t.status === 'completed' || t.status === 'deleted'));
+		const hasNonDeletedSelected = computed(() => selected.value.some(t => t.status !== 'deleted'));
 
 		const refresh = () => {
 			store.dispatch('fetchTasks');
@@ -378,51 +516,66 @@ export default defineComponent({
 			currentTask.value = null;
 		};
 
+		const getPriorityColor = (priority?: string) => {
+			switch (priority) {
+				case 'H': return 'red';
+				case 'M': return 'orange';
+				case 'L': return 'blue';
+				default: return 'grey';
+			}
+		};
+
 		const editTask = (task: Task) => {
 			showTaskDialog.value = true;
 			currentTask.value = _.cloneDeep(task);
 		};
 
 		const completeTasks = async (tasks: Task[]) => {
-			await store.dispatch('updateTasks', tasks.map(task => {
+			const tasksToComplete = tasks.filter(t => t.status === 'pending');
+			if (!tasksToComplete.length) return;
+			await store.dispatch('updateTasks', tasksToComplete.map(task => {
 				return {
 					...task,
 					status: 'completed'
 				};
 			}));
-			selected.value = selected.value.filter(task => tasks.findIndex(t => t.uuid === task.uuid) === -1);
+			selected.value = selected.value.filter(task => tasksToComplete.findIndex(t => t.uuid === task.uuid) === -1);
 			store.commit('setNotification', {
 				color: 'success',
-				text: 'Successfully complete the task(s)'
+				text: 'Successfully completed the task(s)'
 			});
 		};
 
 		const deleteTasks = (tasks: Task[]) => {
+			const tasksToDelete = tasks.filter(t => t.status !== 'deleted');
+			if (!tasksToDelete.length) return;
 			confirmation.text = 'Are you sure to delete the task(s)?';
 			confirmation.handler = async () => {
-				await store.dispatch('deleteTasks', tasks);
-				selected.value = selected.value.filter(task => tasks.findIndex(t => t.uuid === task.uuid) === -1);
+				await store.dispatch('deleteTasks', tasksToDelete);
+				selected.value = selected.value.filter(task => tasksToDelete.findIndex(t => t.uuid === task.uuid) === -1);
 				store.commit('setNotification', {
 					color: 'success',
-					text: 'Successfully delete the task(s)'
+					text: 'Successfully deleted the task(s)'
 				});
 			};
 			showConfirmationDialog.value = true;
 		};
 
 		const restoreTasks = (tasks: Task[]) => {
+			const tasksToRestore = tasks.filter(t => t.status === 'completed' || t.status === 'deleted');
+			if (!tasksToRestore.length) return;
 			confirmation.text = 'Are you sure to restore the task(s)?';
 			confirmation.handler = async () => {
-				await store.dispatch('updateTasks', tasks.map(task => {
+				await store.dispatch('updateTasks', tasksToRestore.map(task => {
 					return {
 						...task,
 						status: 'pending'
 					};
 				}));
-				selected.value = selected.value.filter(task => tasks.findIndex(t => t.uuid === task.uuid) === -1);
+				selected.value = selected.value.filter(task => tasksToRestore.findIndex(t => t.uuid === task.uuid) === -1);
 				store.commit('setNotification', {
 					color: 'success',
-					text: 'Successfully restore the task(s)'
+					text: 'Successfully restored the task(s)'
 				});
 			};
 			showConfirmationDialog.value = true;
@@ -431,20 +584,101 @@ export default defineComponent({
 		const rowClass = (item: Task) => {
 			if (item.mask)
 				return 'recur-task';
-			else if (status.value !== 'completed' && urgentDate(item.due))
+			else if (item.status !== 'completed' && urgentDate(item.due))
 				return 'urgent-task';
-			else if (status.value !== 'completed' && expiredDate(item.due))
+			else if (item.status !== 'completed' && expiredDate(item.due))
 				return 'expired-task';
 			return undefined;
 		};
 
+		const copyTag = (tag: string) => {
+			if (navigator.clipboard) {
+				navigator.clipboard.writeText(tag);
+			}
+			store.commit('setNotification', {
+				color: 'info',
+				text: `Tag "${tag}" copied to clipboard`
+			});
+		};
+
+		const mnemonicGen = new MnemonicGenerator();
+		const taskMnemonics = computed(() => {
+			mnemonicGen.reset();
+			const currentList = displayedTasks.value || [];
+			return mnemonicGen.generateMap(currentList, (t) => t.uuid || '', (t) => t.description || '');
+		});
+
+		const activeTaskUuid = computed(() => store.state.activeTask?.uuid || '');
+
+		const toggleTimer = async (task: Task) => {
+			if (task.start || task.uuid === activeTaskUuid.value) {
+				await store.dispatch('stopTimer', task.uuid);
+			} else {
+				await store.dispatch('startTimer', task.uuid);
+			}
+		};
+
+		const getTaskId = (t: any) => {
+			if (t && t.id !== undefined && t.id !== null && t.id !== '') return t.id;
+			return '-';
+		};
+
+		const getShortUuid = (t: any) => {
+			return t.uuid ? t.uuid.substring(0, 8) : '';
+		};
+
+		const taskUuidToIdMap = computed(() => {
+			const map: { [uuid: string]: string | number } = {};
+			for (const t of props.tasks || []) {
+				if (t.uuid) {
+					map[t.uuid] = (t.id !== undefined && t.id !== null && t.id !== 0) ? t.id : t.uuid.substring(0, 8);
+				}
+			}
+			return map;
+		});
+
+		const formatDepends = (depends: any) => {
+			if (!depends) return '';
+			if (Array.isArray(depends)) {
+				return depends.map(uuid => taskUuidToIdMap.value[uuid] || uuid.substring(0, 8)).join(', ');
+			}
+			const uuids = String(depends).split(',');
+			return uuids.map(u => taskUuidToIdMap.value[u.trim()] || u.trim().substring(0, 8)).join(', ');
+		};
+
+		const getDependents = (task: any) => {
+			if (!task || !task.uuid) return '';
+			const dependents: string[] = [];
+			for (const t of props.tasks || []) {
+				if (t.depends) {
+					const depList = Array.isArray(t.depends) ? t.depends : String(t.depends).split(',').map(s => s.trim());
+					if (depList.includes(task.uuid)) {
+						dependents.push(String(getTaskId(t)));
+					}
+				}
+			}
+			return dependents.join(', ');
+		};
+
 		return {
+			activeTaskUuid,
+			toggleTimer,
+			getTaskId,
+			getShortUuid,
+			formatDepends,
+			getDependents,
+			copyTag,
 			linkify,
 			refresh,
 			headers,
 			filteredHeaders,
 			classifiedTasks,
-			status,
+			displayedTasks,
+			taskMnemonics,
+			selectedStatuses,
+			hasPendingSelected,
+			hasCompletedOrDeletedSelected,
+			hasNonDeletedSelected,
 			allStatus,
 			statusIcons,
 			selected,
@@ -454,6 +688,7 @@ export default defineComponent({
 			currentTask,
 			editTask,
 			deleteTasks,
+			getPriorityColor,
 			completeTasks,
 			restoreTasks,
 			showTaskDialog,
@@ -462,6 +697,7 @@ export default defineComponent({
 			confirmation,
 			displayDate,
 			rowClass,
+			timewPresent: computed(() => store.state.timewPresent),
 
 			TaskDialog,
 			ConfirmationDialog,
@@ -472,6 +708,17 @@ export default defineComponent({
 </script>
 
 <style>
+.v-data-table th .v-data-table-header__icon {
+  display: block !important;
+  margin-top: 4px !important;
+  margin-left: 0 !important;
+}
+
+.v-data-table th {
+  vertical-align: middle;
+  text-align: center;
+}
+
 .v-application tr.recur-task {
   background-color: #2196F333;
 }
@@ -482,5 +729,17 @@ export default defineComponent({
 
 .v-application tr.expired-task {
   background-color: #79554844;
+}
+
+.mnemonic-badge {
+  display: inline-block;
+  background-color: #e53935;
+  color: #ffffff;
+  font-weight: bold;
+  font-size: 0.75rem;
+  padding: 1px 5px;
+  border-radius: 3px;
+  text-transform: lowercase;
+  font-family: monospace;
 }
 </style>

@@ -6,6 +6,8 @@ import * as qs from 'koa-qs';
 
 import tasksRouter from './tasks';
 import syncRouter from './sync';
+import queriesRouter from './queries';
+import reportsRouter from './reports';
 import { TaskError } from 'taskwarrior-lib';
 
 const app = new Koa();
@@ -30,6 +32,8 @@ app.use(async (ctx, next) => {
 const router = new Router();
 router.use('/tasks', tasksRouter.routes());
 router.use('/sync', syncRouter.routes());
+router.use('/config/queries', queriesRouter.routes());
+router.use('/reports', reportsRouter.routes());
 
 app.use(router.routes());
 app.use(router.allowedMethods());

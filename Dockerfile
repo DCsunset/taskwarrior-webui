@@ -1,8 +1,8 @@
-FROM alpine:latest
+FROM alpine:3.20
 
-RUN echo "https://dl-cdn.alpinelinux.org/alpine/v3.20/main" > /etc/apk/repositories
-RUN echo "https://dl-cdn.alpinelinux.org/alpine/edge/community" >> /etc/apk/repositories
-RUN apk --no-cache add nodejs npm nginx task3 python3 build-base
+RUN apk --no-cache add nodejs npm nginx python3 build-base bash \
+ && apk --no-cache add --repository=https://dl-cdn.alpinelinux.org/alpine/edge/community task3 \
+ && (apk --no-cache add timewarrior || apk --no-cache add --repository=https://dl-cdn.alpinelinux.org/alpine/edge/testing timewarrior || true)
 
 COPY ./frontend /src/frontend
 COPY ./backend /src/backend
@@ -17,13 +17,13 @@ ENV TASKDATA="/.task"
 ENV NODE_OPTIONS="--openssl-legacy-provider"
 
 # Frontend
-RUN cd /src/frontend && npm ci \
+RUN cd /src/frontend && npm install \
 	&& npm run build && npm run export \
 	&& cp -r /src/frontend/dist /static \
 	&& rm -r /src/frontend
 
 # Backend
-RUN cd /src/backend && npm ci \
+RUN cd /src/backend && npm install \
 	&& npm run build \
 	&& npm prune --production \
 	&& rm -r /src/backend/src

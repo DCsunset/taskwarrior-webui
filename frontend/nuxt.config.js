@@ -45,6 +45,7 @@ export default {
   ** https://nuxtjs.org/guide/plugins
   */
 	plugins: [
+		{ src: '~/plugins/hotkeys.ts', mode: 'client' }
 	],
 	/*
   ** Auto import components

@@ -63,6 +63,25 @@
 							/>
 						</v-list-item-action>
 					</v-list-item>
+
+					<v-list-item>
+						<v-list-item-content>
+							<v-list-item-title>
+								Assignee Name
+							</v-list-item-title>
+							<v-list-item-subtitle>
+								appended as <code>assignee:name</code> when starting tasks
+							</v-list-item-subtitle>
+						</v-list-item-content>
+						<v-list-item-action style="width: 140px">
+							<v-text-field
+								v-model="settings.assigneeName"
+								dense
+								hide-details
+								placeholder="e.g. john"
+							/>
+						</v-list-item-action>
+					</v-list-item>
 				</v-form>
 			</v-card-text>
 			<v-card-actions>
@@ -106,13 +125,15 @@ export default defineComponent({
 		const settings = reactive({
 			dark: store.state.settings.dark,
 			autoRefresh: store.state.settings.autoRefresh,
-			autoSync: store.state.settings.autoSync
+			autoSync: store.state.settings.autoSync,
+			assigneeName: store.state.settings.assigneeName || ''
 		});
 
 		const reset = () => {
 			settings.dark = store.state.settings.dark;
 			settings.autoRefresh = store.state.settings.autoRefresh;
 			settings.autoSync = store.state.settings.autoSync;
+			settings.assigneeName = store.state.settings.assigneeName || '';
 		};
 
 		const closeDialog = () => {
