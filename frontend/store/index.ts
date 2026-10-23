@@ -14,7 +14,8 @@ export const state = () => ({
 		dark: false,
 		autoRefresh: '5', // in minutes
 		autoSync: '0', // in minutes
-		assigneeName: ''
+		assigneeName: '',
+		hideCompletedProjects: true
 	},
 	hiddenColumns: [] as string[],
 	timewPresent: true
@@ -24,6 +25,20 @@ export type RootState = ReturnType<typeof state>;
 
 export const getters: GetterTree<RootState, RootState> = {
 	projects: state => Array.from(new Set(state.tasks.map(task => task.project).filter((p): p is string => Boolean(p)))),
+	activeProjects: state => {
+		const activeSet = new Set<string>();
+		for (const task of state.tasks) {
+			if (task.project && (task.status === 'pending' || task.status === 'waiting')) {
+				activeSet.add(task.project);
+			}
+		}
+		return Array.from(activeSet).sort();
+	},
+	completedProjects: (_state, getters) => {
+		const allProjects = getters.projects as string[];
+		const activeSet = new Set(getters.activeProjects as string[]);
+		return allProjects.filter(p => !activeSet.has(p)).sort();
+	},
 	tags: state => state.tasks.reduce((tags: string[], task) => {
 		return task.tags ? tags.concat(task.tags) : tags;
 	}, []),
@@ -67,14 +82,24 @@ export const actions: ActionTree<RootState, RootState> = {
 		try {
 			const { present } = await this.$axios.$get('/api/tasks/timew-status');
 			context.commit('setTimewPresent', present);
-		} catch (e) {
+		}
+		catch (e) {
 			context.commit('setTimewPresent', false);
 		}
 	},
 	fetchSettings(context) {
 		const settings = localStorage.getItem('settings');
 		if (settings) {
-			context.commit('setSettings', JSON.parse(settings));
+			try {
+				const parsed = JSON.parse(settings);
+				context.commit('setSettings', {
+					...context.state.settings,
+					...parsed
+				});
+			}
+			catch (e) {
+				// Use defaults if storage corrupted
+			}
 		}
 	},
 

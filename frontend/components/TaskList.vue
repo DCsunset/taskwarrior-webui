@@ -7,7 +7,7 @@
 			@yes="confirmation.handler"
 		/>
 		<TaskDialog v-model="showTaskDialog" :task="currentTask || undefined" />
-		<ColumnDialog v-model="showColumnDialog" :active-columns="headers"/>
+		<ColumnDialog v-model="showColumnDialog" :active-columns="headers" />
 		<v-row class="px-4 pt-4">
 			<v-btn-toggle v-model="selectedStatuses" multiple background-color="rgba(0, 0, 0, 0)">
 				<v-row class="pa-3">
@@ -37,71 +37,71 @@
 		</v-row>
 
 		<v-row class="px-4 pt-4">
-		<v-data-table
-			:items="displayedTasks"
-			:headers="filteredHeaders"
-			show-select
-			item-key="uuid"
-			:item-class="rowClass"
-			v-model="selected"
-			class="elevation-1"
-			style="width: 100%"
-		>
-			<template v-slot:top>
-				<v-row class="px-4">
-					<!-- Batch actions -->
-					<div class="pl-2 pt-2" v-show="selected.length">
-						<v-btn
-							v-show="hasPendingSelected"
-							class="ma-1 green"
-							fab
-							small
-							dark
-							title="Done"
-							@click="completeTasks(selected)"
-						>
-							<v-icon>mdi-check</v-icon>
-						</v-btn>
-						<v-btn
-							v-show="hasCompletedOrDeletedSelected"
-							class="ma-1"
-							color="primary"
-							fab
-							dark
-							small
-							title="Restore"
-							@click="restoreTasks(selected)"
-						>
-							<v-icon>mdi-restore</v-icon>
-						</v-btn>
-						<v-btn
-							v-show="hasNonDeletedSelected"
-							class="ma-1 red"
-							fab
-							dark
-							small
-							title="Delete"
-							@click="deleteTasks(selected)"
-						>
-							<v-icon>mdi-delete</v-icon>
-						</v-btn>
-					</div>
+			<v-data-table
+				:items="displayedTasks"
+				:headers="filteredHeaders"
+				show-select
+				item-key="uuid"
+				:item-class="rowClass"
+				v-model="selected"
+				class="elevation-1"
+				style="width: 100%"
+			>
+				<template v-slot:top>
+					<v-row class="px-4">
+						<!-- Batch actions -->
+						<div class="pl-2 pt-2" v-show="selected.length">
+							<v-btn
+								v-show="hasPendingSelected"
+								class="ma-1 green"
+								fab
+								small
+								dark
+								title="Done"
+								@click="completeTasks(selected)"
+							>
+								<v-icon>mdi-check</v-icon>
+							</v-btn>
+							<v-btn
+								v-show="hasCompletedOrDeletedSelected"
+								class="ma-1"
+								color="primary"
+								fab
+								dark
+								small
+								title="Restore"
+								@click="restoreTasks(selected)"
+							>
+								<v-icon>mdi-restore</v-icon>
+							</v-btn>
+							<v-btn
+								v-show="hasNonDeletedSelected"
+								class="ma-1 red"
+								fab
+								dark
+								small
+								title="Delete"
+								@click="deleteTasks(selected)"
+							>
+								<v-icon>mdi-delete</v-icon>
+							</v-btn>
+						</div>
 
-					<v-spacer />
+						<v-spacer />
 
-					<!-- Global Actions -->
-					<div class="ma-2">
-						<v-btn
-							class="green ml-1"
-							fab
-							dark
-							title="Refresh"
-							@click="refresh"
-						>
-							<v-icon>mdi-refresh</v-icon>
-						</v-btn>
+						<!-- Global Actions -->
+						<div class="ma-2">
+							<v-btn
+								class="green ml-1"
+								fab
+								dark
+								title="Refresh"
+								@click="refresh"
+							>
+								<v-icon>mdi-refresh</v-icon>
+							</v-btn>
 
-						<v-btn
+							<v-btn
 								v-if="showSyncBtn"
 								class="green ml-1"
 								fab
@@ -110,150 +110,150 @@
 								@click="syncTasks"
 							>
 								<v-icon>mdi-sync</v-icon>
-						</v-btn>
+							</v-btn>
 
-						<v-btn
-							class="primary ml-1"
-							fab
-							dark
-							title="New task"
-							@click="newTask"
-						>
-							<v-icon>mdi-plus</v-icon>
-						</v-btn>
-						<v-btn
-							class="primary ml-1"
-							fab
-							dark
-							small
-							title="Configure Columns"
-							@click="showColumnDialog = true"
-						>
-							<v-icon>mdi-cogs</v-icon>
-						</v-btn>
-					</div>
-				</v-row>
-			</template>
+							<v-btn
+								class="primary ml-1"
+								fab
+								dark
+								title="New task"
+								@click="newTask"
+							>
+								<v-icon>mdi-plus</v-icon>
+							</v-btn>
+							<v-btn
+								class="primary ml-1"
+								fab
+								dark
+								small
+								title="Configure Columns"
+								@click="showColumnDialog = true"
+							>
+								<v-icon>mdi-cogs</v-icon>
+							</v-btn>
+						</div>
+					</v-row>
+				</template>
 
-			<template v-slot:item.description="{ item }">
-				<span v-if="taskMnemonics.has(item.uuid)" class="mnemonic-badge mr-2">{{ taskMnemonics.get(item.uuid) }}</span>
-				<span v-html="linkify(item.description)" />
-			</template>
+				<template v-slot:item.description="{ item }">
+					<span v-if="taskMnemonics.has(item.uuid)" class="mnemonic-badge mr-2">{{ taskMnemonics.get(item.uuid) }}</span>
+					<span v-html="linkify(item.description)" />
+				</template>
 
-			<template v-slot:item.id="{ item }">
-				<span class="font-weight-bold primary--text">
-					<span v-if="item.id !== 0 && item.id !== undefined && item.id !== null">#{{ item.id }}</span>
-					<span v-else>#-</span>
-				</span>
-				<span v-if="item.uuid" class="caption text--secondary ml-1">({{ item.uuid.substring(0, 8) }})</span>
-			</template>
+				<template v-slot:item.id="{ item }">
+					<span class="font-weight-bold primary--text">
+						<span v-if="item.id !== 0 && item.id !== undefined && item.id !== null">#{{ item.id }}</span>
+						<span v-else>#-</span>
+					</span>
+					<span v-if="item.uuid" class="caption text--secondary ml-1">({{ item.uuid.substring(0, 8) }})</span>
+				</template>
 
-			<template v-slot:item.depends="{ item }">
-				<v-chip v-if="item.depends" x-small color="warning" dark :title="'Blocked by: ' + item.depends">
-					<v-icon left x-small>mdi-lock-outline</v-icon>{{ formatDepends(item.depends) }}
-				</v-chip>
-			</template>
+				<template v-slot:item.depends="{ item }">
+					<v-chip v-if="item.depends" x-small color="warning" dark :title="'Blocked by: ' + item.depends">
+						<v-icon left x-small>mdi-lock-outline</v-icon>{{ formatDepends(item.depends) }}
+					</v-chip>
+				</template>
 
-			<template v-slot:item.dependents="{ item }">
-				<v-chip v-if="getDependents(item)" x-small color="info" dark :title="'Blocking: ' + getDependents(item)">
-					<v-icon left x-small>mdi-account-arrow-right-outline</v-icon>{{ getDependents(item) }}
-				</v-chip>
-			</template>
+				<template v-slot:item.dependents="{ item }">
+					<v-chip v-if="getDependents(item)" x-small color="info" dark :title="'Blocking: ' + getDependents(item)">
+						<v-icon left x-small>mdi-account-arrow-right-outline</v-icon>{{ getDependents(item) }}
+					</v-chip>
+				</template>
 
-			<template v-slot:item.priority="{ item }">
-				<v-chip v-if="item.priority" x-small :color="getPriorityColor(item.priority)" dark class="priority-chip mr-1">
-					{{ item.priority }}
-				</v-chip>
-			</template>
+				<template v-slot:item.priority="{ item }">
+					<v-chip v-if="item.priority" x-small :color="getPriorityColor(item.priority)" dark class="priority-chip mr-1">
+						{{ item.priority }}
+					</v-chip>
+				</template>
 
-			<template v-slot:item.wait="{ item }">
-				{{ displayDate(item.wait) }}
-			</template>
-			<template v-slot:item.scheduled="{ item }">
-				{{ displayDate(item.scheduled) }}
-			</template>
-			<template v-slot:item.due="{ item }">
-				{{ displayDate(item.due) }}
-			</template>
-			<template v-slot:item.until="{ item }">
-				{{ displayDate(item.until) }}
-			</template>
+				<template v-slot:item.wait="{ item }">
+					{{ displayDate(item.wait) }}
+				</template>
+				<template v-slot:item.scheduled="{ item }">
+					{{ displayDate(item.scheduled) }}
+				</template>
+				<template v-slot:item.due="{ item }">
+					{{ displayDate(item.due) }}
+				</template>
+				<template v-slot:item.until="{ item }">
+					{{ displayDate(item.until) }}
+				</template>
 
-			<template v-slot:item.tags="{ item }">
-				<v-chip
-					v-for="tag in item.tags"
-					:key="tag"
-					small
-					class="mr-1 mb-1"
-				>
-					{{ tag }}
-					<v-icon
-						right
-						x-small
-						class="ml-1"
-						title="Copy tag"
-						@click.stop="copyTag(tag)"
+				<template v-slot:item.tags="{ item }">
+					<v-chip
+						v-for="tag in item.tags"
+						:key="tag"
+						small
+						class="mr-1 mb-1"
 					>
-						mdi-content-copy
+						{{ tag }}
+						<v-icon
+							right
+							x-small
+							class="ml-1"
+							title="Copy tag"
+							@click.stop="copyTag(tag)"
+						>
+							mdi-content-copy
+						</v-icon>
+					</v-chip>
+				</template>
+
+				<template v-slot:item.urgency="{ item }">
+					{{ item.urgency }}
+				</template>
+
+				<template v-slot:item.actions="{ item }">
+					<v-icon
+						v-show="item.status === 'pending'"
+						v-if="timewPresent"
+						size="20px"
+						class="ml-2"
+						:color="item.start || item.uuid === activeTaskUuid ? 'warning' : 'success'"
+						@click="toggleTimer(item)"
+						:title="item.start || item.uuid === activeTaskUuid ? 'Stop Timer' : 'Start Timer'"
+					>
+						{{ item.start || item.uuid === activeTaskUuid ? 'mdi-stop' : 'mdi-play' }}
 					</v-icon>
-				</v-chip>
-			</template>
-
-			<template v-slot:item.urgency="{ item }">
-				{{ item.urgency }}
-			</template>
-
-			<template v-slot:item.actions="{ item }">
-				<v-icon
-					v-show="item.status === 'pending'"
-					v-if="timewPresent"
-					size="20px"
-					class="ml-2"
-					:color="item.start || item.uuid === activeTaskUuid ? 'warning' : 'success'"
-					@click="toggleTimer(item)"
-					:title="item.start || item.uuid === activeTaskUuid ? 'Stop Timer' : 'Start Timer'"
-				>
-					{{ item.start || item.uuid === activeTaskUuid ? 'mdi-stop' : 'mdi-play' }}
-				</v-icon>
-				<v-icon
-					v-show="item.status === 'pending'"
-					size="20px"
-					class="ml-2"
-					@click="completeTasks([item])"
-					title="Done"
-				>
-					mdi-check
-				</v-icon>
-				<v-icon
-					v-show="item.status === 'completed' || item.status === 'deleted'"
-					size="20px"
-					class="ml-2"
-					@click="restoreTasks([item])"
-					title="Restore"
-				>
-					mdi-restore
-				</v-icon>
-				<v-icon
-					class="ml-2"
-					size="20px"
-					@click="editTask(item)"
-					title="Edit"
-				>
-					mdi-pencil
-				</v-icon>
-				<v-icon
-					v-show="item.status !== 'deleted'"
-					class="ml-2"
-					size="20px"
-					@click="deleteTasks([item])"
-					title="Delete"
-				>
-					mdi-delete
-				</v-icon>
-			</template>
-		</v-data-table>
-  </v-row>
-  </div>
+					<v-icon
+						v-show="item.status === 'pending'"
+						size="20px"
+						class="ml-2"
+						@click="completeTasks([item])"
+						title="Done"
+					>
+						mdi-check
+					</v-icon>
+					<v-icon
+						v-show="item.status === 'completed' || item.status === 'deleted'"
+						size="20px"
+						class="ml-2"
+						@click="restoreTasks([item])"
+						title="Restore"
+					>
+						mdi-restore
+					</v-icon>
+					<v-icon
+						class="ml-2"
+						size="20px"
+						@click="editTask(item)"
+						title="Edit"
+					>
+						mdi-pencil
+					</v-icon>
+					<v-icon
+						v-show="item.status !== 'deleted'"
+						class="ml-2"
+						size="20px"
+						@click="deleteTasks([item])"
+						title="Delete"
+					>
+						mdi-delete
+					</v-icon>
+				</template>
+			</v-data-table>
+		</v-row>
+	</div>
 </template>
 
 <script lang="ts">
@@ -264,10 +264,9 @@ import TaskDialog from '../components/TaskDialog.vue';
 import ConfirmationDialog from '../components/ConfirmationDialog.vue';
 import ColumnDialog from '../components/ColumnDialog.vue';
 import moment from 'moment';
-import urlRegex from 'url-regex-safe';
-import normalizeUrl from 'normalize-url';
-import { accessorType  } from "../store";
+import { accessorType } from '../store';
 import { MnemonicGenerator } from '../utils/mnemonics';
+import { linkify } from '../utils/linkify';
 
 function displayDate(str?: string) {
 	if (!str)
@@ -307,30 +306,6 @@ function futureDate(str?: string) {
 
 	const date = moment(str);
 	return date.isAfter(moment());
-}
-
-function linkify(text: string) {
-	if (!text) return '';
-	const regex = urlRegex();
-
-	let match;
-	let lastIndex = 0;
-	let result = '';
-	while ((match = regex.exec(text)) !== null) {
-		const str = text.substring(lastIndex, match.index);
-		let href = match[0];
-		try {
-			href = normalizeUrl(match[0]);
-		} catch (e) {
-			// Fallback if normalizeUrl fails on pseudo-URL string
-		}
-		const url = `<a target="_blank" href="${href}">${match[0]}</a>`;
-		result = `${result}${str}${url}`;
-		lastIndex = match.index + match[0].length;
-	}
-	result += text.substring(lastIndex);
-
-	return result;
 }
 
 export default defineComponent({
@@ -380,7 +355,8 @@ export default defineComponent({
 			let serialized = '';
 			if (sorted.length === 0) {
 				serialized = 'none';
-			} else {
+			}
+			else {
 				serialized = sorted.join(',');
 			}
 
@@ -417,22 +393,22 @@ export default defineComponent({
 			{ text: 'Actions', value: 'actions', sortable: false }
 		]);
 
-		const filteredHeaders = computed(()=>
-			headers.value.filter((v)=> !store.state.hiddenColumns.includes(v.value))
-		)
+		const filteredHeaders = computed(() =>
+			headers.value.filter((v) => !store.state.hiddenColumns.includes(v.value))
+		);
 
 		const showColumnDialog = ref(false);
 
 		const tempTasks: { [key: string]: ComputedRef<Task[]> } = {};
 		for (const status of allStatus) {
 			tempTasks[status] = computed((): Task[] => props.tasks?.filter(task => {
-				if (status === "waiting" || status === "pending") {
+				if (status === 'waiting' || status === 'pending') {
 					const waiting = (task.wait && !expiredDate(task.wait))
 						|| (task.scheduled && futureDate(task.scheduled));
-					return task.status === "pending" && (status === "pending" ? !waiting : waiting);
+					return task.status === 'pending' && (status === 'pending' ? !waiting : waiting);
 				}
-				else if (status === "pending") {
-					return task.status === "pending" && !(task.wait && !expiredDate(task.wait));
+				else if (status === 'pending') {
+					return task.status === 'pending' && !(task.wait && !expiredDate(task.wait));
 				}
 				else {
 					return task.status === status;
@@ -503,7 +479,8 @@ export default defineComponent({
 					color: 'success',
 					text: 'Successfully synced tasks.'
 				});
-			} catch (error) {
+			}
+			catch (error) {
 				store.commit('setNotification', {
 					color: 'error',
 					text: 'Failed to sync tasks.'
@@ -613,7 +590,8 @@ export default defineComponent({
 		const toggleTimer = async (task: Task) => {
 			if (task.start || task.uuid === activeTaskUuid.value) {
 				await store.dispatch('stopTimer', task.uuid);
-			} else {
+			}
+			else {
 				await store.dispatch('startTimer', task.uuid);
 			}
 		};
@@ -701,7 +679,7 @@ export default defineComponent({
 
 			TaskDialog,
 			ConfirmationDialog,
-			ColumnDialog,
+			ColumnDialog
 		};
 	}
 });

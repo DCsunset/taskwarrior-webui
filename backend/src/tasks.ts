@@ -96,8 +96,14 @@ router.post('/:uuid/modify', async ctx => {
 });
 
 router.get('/', async ctx => {
-	const tasks = taskwarrior.load();
-	ctx.body = tasks;
+	try {
+		const tasks = taskwarrior.load();
+		ctx.body = tasks;
+	} catch (err: any) {
+		console.error('Failed to load tasks from taskwarrior:', err);
+		ctx.status = 500;
+		ctx.body = { error: 'Failed to load tasks. Verify .taskrc configuration and theme paths.' };
+	}
 });
 
 router.put('/', async ctx => {
