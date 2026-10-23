@@ -22,7 +22,7 @@
 - Widgets (`components/ActiveTaskBar.vue`, `components/UndoDialog.vue`, `components/CustomQueryBar.vue`, `components/ReportsView.vue`).
 - Global Controls & Live Search (`pages/index.vue`): Top-bar search text field with 300ms debounced `?search=` synchronization, view switcher (`mode`), project and assignee filtering applied to `filteredTasks`.
 - Multi-Toggle Task List (`components/TaskList.vue`): Independent status button toggles (`v-btn-toggle multiple`), aggregated task display (`displayedTasks`), dynamic column headers (`Due`, `Wait`, `Recur`), and `?status=` query parameter synchronization (preserved across view mode transitions and strictly ignored by Kanban view).
-- Gantt & Timeline Engine (`components/GanttChart.vue`): Start/due date resolution, priority/urgency vertical sorting, non-intersecting orthogonal SVG arrows, fluid Day/Week/Month horizontal scrolling, and Calendarless topological flow view.
+- Gantt & Timeline Engine (`components/GanttChart.vue`): Start/due date resolution, priority/urgency vertical sorting (with deleted tasks positioned last), non-intersecting orthogonal SVG arrows, fluid Day/Week/Month horizontal scrolling, Calendarless topological flow view, unified top-bar live search integration, and reused multi-toggle status button group synchronizing with `?status=` query parameter.
 
 ## Verification Strategy
 - Backend API integration testing for timer and undo endpoints.
