@@ -1,5 +1,5 @@
 import * as Router from '@koa/router';
-import taskwarrior from './taskwarrior';
+import { getTaskwarriorFromCtx } from './profiles';
 
 const router = new Router();
 
@@ -12,7 +12,8 @@ interface ProjectReport {
 }
 
 router.get('/projects', async ctx => {
-	const allTasks = taskwarrior.load();
+	const tw = getTaskwarriorFromCtx(ctx);
+	const allTasks = tw.load();
 	const projectMap: Record<string, { completed: number; pending: number }> = {};
 
 	allTasks.forEach((task: any) => {

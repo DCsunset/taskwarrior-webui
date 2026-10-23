@@ -1,13 +1,15 @@
 import * as Router from '@koa/router';
 
-import taskwarrior from './taskwarrior';
+import { getTaskwarriorFromCtx } from './profiles';
 
 const router = new Router();
 
 router.post('/', async ctx => {
-	const msg = taskwarrior.executeCommand('sync');
+	const tw = getTaskwarriorFromCtx(ctx);
+	const msg = tw.executeCommand('sync');
 	console.log(msg);
 	ctx.status = 200;
 });
 
 export default router;
+

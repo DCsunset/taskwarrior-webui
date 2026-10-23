@@ -45,6 +45,66 @@
 			/>
 			<ActiveTaskBar v-if="timewPresent" />
 			<v-spacer />
+
+			<!-- Profile Selector (shown if more than 1 profile is configured) -->
+			<v-menu v-if="profiles.length > 1" offset-y>
+				<template v-slot:activator="{ on, attrs }">
+					<v-btn
+						text
+						small
+						class="mr-2 text-capitalize"
+						v-bind="attrs"
+						v-on="on"
+					>
+						<v-icon left small>mdi-account-switch</v-icon>
+						{{ currentProfile }}
+					</v-btn>
+				</template>
+				<v-list dense>
+					<v-list-item
+						v-for="prof in profiles"
+						:key="prof"
+						@click="handleSelectProfile(prof)"
+					>
+						<v-list-item-title :class="{ 'font-weight-bold primary--text': prof === currentProfile }">
+							{{ prof }}
+						</v-list-item-title>
+					</v-list-item>
+				</v-list>
+			</v-menu>
+
+			<!-- Context Selector (shown if contexts are defined) -->
+			<v-menu v-if="contexts.length > 0" offset-y>
+				<template v-slot:activator="{ on, attrs }">
+					<v-btn
+						text
+						small
+						class="mr-2 text-capitalize"
+						v-bind="attrs"
+						v-on="on"
+					>
+						<v-icon left small>mdi-tag-outline</v-icon>
+						Context: {{ currentContext }}
+					</v-btn>
+				</template>
+				<v-list dense>
+					<v-list-item @click="handleSelectContext('none')">
+						<v-list-item-title :class="{ 'font-weight-bold primary--text': currentContext === 'none' }">
+							none (clear)
+						</v-list-item-title>
+					</v-list-item>
+					<v-list-item
+						v-for="ctxName in contexts"
+						:key="ctxName"
+						@click="handleSelectContext(ctxName)"
+					>
+						<v-list-item-title :class="{ 'font-weight-bold primary--text': ctxName === currentContext }">
+							{{ ctxName }}
+						</v-list-item-title>
+					</v-list-item>
+				</v-list>
+			</v-menu>
+
 			<v-icon
 				class="mr-4"
 				size="28px"
@@ -90,6 +150,8 @@ export default defineComponent({
 		store.dispatch('fetchSettings');
 		store.dispatch('fetchHiddenColumns');
 		store.dispatch('fetchTimewStatus');
+		store.dispatch('fetchProfiles');
+		store.dispatch('fetchContexts');
 
 		context.$vuetify.theme.dark = store.state.settings.dark;
 
@@ -99,6 +161,19 @@ export default defineComponent({
 				context.$vuetify.theme.dark = val;
 			}
 		});
+
+		const currentProfile = computed(() => store.state.currentProfile);
+		const profiles = computed(() => store.state.profiles);
+		const currentContext = computed(() => store.state.currentContext);
+		const contexts = computed(() => store.state.contexts);
+
+		const handleSelectProfile = (profile: string) => {
+			store.dispatch('switchProfile', profile);
+		};
+
+		const handleSelectContext = (contextName: string) => {
+			store.dispatch('switchContext', contextName);
+		};
 
 		const settingsDialog = ref(false);
 		const showUndoDialog = ref(false);
@@ -172,6 +247,12 @@ export default defineComponent({
 			settingsDialog,
 			showUndoDialog,
 			timewPresent: computed(() => store.state.timewPresent),
+			currentProfile,
+			profiles,
+			currentContext,
+			contexts,
+			handleSelectProfile,
+			handleSelectContext,
 
 			SettingsDialog,
 			ActiveTaskBar,

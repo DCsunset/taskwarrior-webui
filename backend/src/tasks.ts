@@ -1,7 +1,7 @@
 import * as Router from '@koa/router';
 
-import taskwarrior from './taskwarrior';
 import { Task } from "taskwarrior-lib";
+import { getTaskwarriorFromCtx, getProfile } from './profiles';
 
 import { execSync, execFileSync } from 'child_process';
 import { parse } from 'shell-quote';
@@ -40,121 +40,140 @@ router.get('/timew-status', async ctx => {
 });
 
 router.get('/undo/preview', async ctx => {
-	const output = taskwarrior.executeCommand('undo');
+	const tw = getTaskwarriorFromCtx(ctx);
+	const output = tw.executeCommand('undo');
 	ctx.body = { report: output };
 });
 
 router.post('/undo', async ctx => {
-	const msg = taskwarrior.executeCommand('rc.confirmation:off undo');
+	const tw = getTaskwarriorFromCtx(ctx);
+	const msg = tw.executeCommand('rc.confirmation:off undo');
 	console.log(msg);
 	ctx.status = 200;
 });
 
 router.get('/active', async ctx => {
-	const activeTasks = taskwarrior.load('+ACTIVE');
+	const tw = getTaskwarriorFromCtx(ctx);
+	const activeTasks = tw.load('+ACTIVE');
 	ctx.body = activeTasks.length > 0 ? activeTasks[0] : null;
 });
 
 router.post('/:uuid/start', async ctx => {
+	const tw = getTaskwarriorFromCtx(ctx);
 	const uuid = ctx.params.uuid;
 	try {
-		const activeTasks = taskwarrior.load('+ACTIVE');
+		const activeTasks = tw.load('+ACTIVE');
 		if (activeTasks && activeTasks.length > 0) {
-			taskwarrior.executeCommand('+ACTIVE stop');
+			tw.executeCommand('+ACTIVE stop');
 		}
 	} catch (e) {
 		console.warn('Failed to stop active tasks:', e);
 	}
 	const { assignee } = (ctx.request as any).body || {};
 	const assigneeMod = assignee ? ` assignee:${assignee}` : '';
-	const msg = taskwarrior.executeCommand("'" + uuid + "'" + ' start' + assigneeMod);
+	const msg = tw.executeCommand("'" + uuid + "'" + ' start' + assigneeMod);
 	console.log(msg);
 	ctx.status = 200;
 });
 
 router.post('/:uuid/stop', async ctx => {
+	const tw = getTaskwarriorFromCtx(ctx);
 	const uuid = ctx.params.uuid;
-	const msg = taskwarrior.executeCommand("'" + uuid + "'" + ' stop');
+	const msg = tw.executeCommand("'" + uuid + "'" + ' stop');
 	console.log(msg);
 	ctx.status = 200;
 });
 
 router.post('/:uuid/annotate', async ctx => {
+	const tw = getTaskwarriorFromCtx(ctx);
 	const uuid = ctx.params.uuid;
 	const body = ctx.request.body as { annotation: string };
-	const msg = taskwarrior.executeCommand("'" + uuid + "' annotate " + body.annotation);
+	const msg = tw.executeCommand("'" + uuid + "' annotate " + body.annotation);
 	console.log(msg);
 	ctx.status = 200;
 });
 
 router.post('/:uuid/modify', async ctx => {
+	const tw = getTaskwarriorFromCtx(ctx);
 	const uuid = ctx.params.uuid;
 	const body = ctx.request.body as { command: string };
-	const msg = taskwarrior.executeCommand("'" + uuid + "' modify " + body.command);
+	const msg = tw.executeCommand("'" + uuid + "' modify " + body.command);
 	console.log(msg);
 	ctx.status = 200;
 });
 
 router.get('/', async ctx => {
-	const tasks = taskwarrior.load();
+	const tw = getTaskwarriorFromCtx(ctx);
+	const tasks = tw.load();
 	ctx.body = tasks;
 });
 
 router.put('/', async ctx => {
+	const tw = getTaskwarriorFromCtx(ctx);
 	const body = ctx.request.body as { tasks: Task[] };
-	const msg = taskwarrior.update(body.tasks);
+	const msg = tw.update(body.tasks);
 	console.log(msg);
 	ctx.status = 200;
 });
 
 router.delete('/', async ctx => {
+	const tw = getTaskwarriorFromCtx(ctx);
 	const tasks = ctx.query.tasks as string[];
-	const msg = taskwarrior.del(tasks.map(t => ({ uuid: t })));
+	const msg = tw.del(tasks.map(t => ({ uuid: t })));
 	console.log(msg);
 	ctx.status = 200;
 });
 
 router.post('/command', async ctx => {
 	const body = ctx.request.body as { command: string; assignee?: string; project?: string };
-		const { command, assignee, project } = body;
+	const { command, assignee, project } = body;
+	
+	if (!command) {
+		ctx.status = 400;
+		ctx.body = { error: 'Command is required' };
+		return;
+	}
+
+	try {
+		const args = parse(command);
+		const stringArgs = args.filter((a): a is string => typeof a === 'string');
 		
-		if (!command) {
+		if (stringArgs.length === 0) {
 			ctx.status = 400;
-			ctx.body = { error: 'Command is required' };
+			ctx.body = { error: 'Invalid command' };
 			return;
 		}
 
-		try {
-			const args = parse(command);
-			const stringArgs = args.filter((a): a is string => typeof a === 'string');
-			
-			if (stringArgs.length === 0) {
-				ctx.status = 400;
-				ctx.body = { error: 'Invalid command' };
-				return;
-			}
+		let executable = 'task';
+		if (stringArgs[0] === 'timew' || stringArgs[0] === 'task') {
+			executable = stringArgs[0];
+			stringArgs.shift();
+		}
+		
+		const profileHeader = (ctx.headers['x-taskwarrior-profile'] || ctx.query.profile) as string | undefined;
+		const contextHeader = (ctx.headers['x-taskwarrior-context'] || ctx.query.context) as string | undefined;
+		const profile = getProfile(profileHeader);
 
-			let executable = 'task';
-			if (stringArgs[0] === 'timew' || stringArgs[0] === 'task') {
-				executable = stringArgs[0];
-				stringArgs.shift();
+		if (executable === 'task') {
+			const isCreation = stringArgs.includes('add') || stringArgs.includes('log');
+			if (assignee) {
+				stringArgs.push(`assignee:${assignee}`);
 			}
-			
-			if (executable === 'task') {
-				const isCreation = stringArgs.includes('add') || stringArgs.includes('log');
-				if (assignee) {
-					stringArgs.push(`assignee:${assignee}`);
-				}
-				if (isCreation && project) {
-					stringArgs.push(`project:${project}`);
-				}
-				stringArgs.unshift('rc.confirmation=off', 'rc.bulk=0');
-			} else if (executable === 'timew') {
-				stringArgs.push(':yes');
+			if (isCreation && project) {
+				stringArgs.push(`project:${project}`);
 			}
+			if (contextHeader) {
+				stringArgs.unshift(`rc.context=${contextHeader}`);
+			}
+			stringArgs.unshift('rc.confirmation=off', 'rc.bulk=0', 'rc._forcecolor=off', 'rc.defaultwidth=0');
+		} else if (executable === 'timew') {
+			stringArgs.push(':yes');
+		}
 
-		// Allow testing locally if TASKRC/TASKDATA are passed as env
+		// Support profile paths in env for command execution
 		const env = { ...process.env };
+		if (profile.rcPath) env.TASKRC = profile.rcPath;
+		if (profile.dataPath) env.TASKDATA = profile.dataPath;
 		
 		// Run command
 		const output = execFileSync(executable, stringArgs, { encoding: 'utf-8', env });

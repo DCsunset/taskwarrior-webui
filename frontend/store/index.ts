@@ -17,7 +17,11 @@ export const state = () => ({
 		assigneeName: ''
 	},
 	hiddenColumns: [] as string[],
-	timewPresent: true
+	timewPresent: true,
+	currentProfile: 'Default',
+	profiles: [] as string[],
+	currentContext: 'none',
+	contexts: [] as string[]
 });
 
 export type RootState = ReturnType<typeof state>;
@@ -59,8 +63,25 @@ export const mutations: MutationTree<RootState> = {
 
 	setTimewPresent(state, present: boolean) {
 		state.timewPresent = present;
+	},
+
+	setCurrentProfile(state, profile: string) {
+		state.currentProfile = profile;
+	},
+
+	setProfiles(state, profiles: string[]) {
+		state.profiles = profiles;
+	},
+
+	setCurrentContext(state, context: string) {
+		state.currentContext = context;
+	},
+
+	setContexts(state, contexts: string[]) {
+		state.contexts = contexts;
 	}
 };
+
 
 export const actions: ActionTree<RootState, RootState> = {
 	async fetchTimewStatus(context) {
@@ -133,8 +154,53 @@ export const actions: ActionTree<RootState, RootState> = {
 
 	async syncTasks(_context) {
 		await this.$axios.$post('/api/sync');
+	},
+
+	async fetchProfiles(context) {
+		try {
+			const res: any = await this.$axios.$get('/api/config/profiles');
+			if (res && res.profiles) {
+				context.commit('setProfiles', res.profiles);
+			}
+			const saved = localStorage.getItem('taskwarrior_profile');
+			if (saved && res.profiles.includes(saved)) {
+				context.commit('setCurrentProfile', saved);
+			}
+		} catch (e) {
+			console.warn('Failed to fetch profiles:', e);
+		}
+	},
+
+	async switchProfile(context, profile: string) {
+		context.commit('setCurrentProfile', profile);
+		localStorage.setItem('taskwarrior_profile', profile);
+		await context.dispatch('fetchContexts');
+		await context.dispatch('fetchTasks');
+	},
+
+	async fetchContexts(context) {
+		try {
+			const res: any = await this.$axios.$get('/api/config/contexts');
+			if (res) {
+				if (res.contexts) context.commit('setContexts', res.contexts);
+				if (res.currentContext) context.commit('setCurrentContext', res.currentContext);
+			}
+		} catch (e) {
+			console.warn('Failed to fetch contexts:', e);
+		}
+	},
+
+	async switchContext(context, newContext: string) {
+		try {
+			await this.$axios.$post('/api/config/contexts', { context: newContext });
+			context.commit('setCurrentContext', newContext);
+			await context.dispatch('fetchTasks');
+		} catch (e) {
+			console.warn('Failed to switch context:', e);
+		}
 	}
 };
+
 
 export const accessorType = getAccessorType({
 	state,
