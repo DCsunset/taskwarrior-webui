@@ -58,7 +58,12 @@
 		/>
 		<TaskList v-else :tasks="filteredTasks" ref="taskListRef" />
 
-		<TaskDialog v-model="showTaskDialog" :task="editingTask || undefined" />
+		<TaskDialog
+			v-model="showTaskDialog"
+			:task="editingTask || undefined"
+			:initial-project="currentFilteredProject"
+			:initial-assignee="currentFilteredAssignee"
+		/>
 		<SnoozeDialog v-model="showSnoozeDialog" @confirm="handleSnoozeConfirm" @cancel="handleSnoozeCancel" />
 	</div>
 </template>
@@ -223,6 +228,20 @@ export default defineComponent({
 		const showTaskDialog = ref(false);
 		const editingTask = ref<Task | null>(null);
 
+		const currentFilteredProject = computed(() => {
+			if (selectedProject.value && selectedProject.value !== '(All Projects)' && selectedProject.value !== '(No Project)') {
+				return selectedProject.value;
+			}
+			return '';
+		});
+
+		const currentFilteredAssignee = computed(() => {
+			if (selectedAssignee.value && selectedAssignee.value !== '(All Assignees)' && selectedAssignee.value !== '(Unassigned)') {
+				return selectedAssignee.value;
+			}
+			return '';
+		});
+
 		const showSnoozeDialog = ref(false);
 		const taskToSnooze = ref<Task | null>(null);
 
@@ -321,6 +340,8 @@ export default defineComponent({
 			activeTaskUuid,
 			showTaskDialog,
 			editingTask,
+			currentFilteredProject,
+			currentFilteredAssignee,
 			showSnoozeDialog,
 			handleEditTask,
 			handleCompleteTask,

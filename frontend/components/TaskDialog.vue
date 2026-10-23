@@ -22,6 +22,7 @@
 			<v-card-text>
 				<v-form ref="formRef" lazy-validation>
 					<v-text-field
+						ref="descriptionInputRef"
 						autofocus
 						v-model="formData.description"
 						label="Description*"
@@ -68,28 +69,102 @@
 						hint="Press tab or enter to add new tags"
 					/>
 					<v-row class="px-3">
-						<v-text-field
-							class="mr-3"
-							v-model="formData.due"
-							:label="recur ? 'Due*' : 'Due'"
-							:rules="recur ? requiredRules : []"
-							:required="recur"
-						/>
-						<v-text-field
-							v-model="formData.until"
-							label="Until"
-						/>
+						<v-menu
+							v-model="dueMenu"
+							:close-on-content-click="false"
+							transition="scale-transition"
+							offset-y
+							min-width="auto"
+						>
+							<template v-slot:activator="{ on, attrs }">
+								<v-text-field
+									class="mr-3"
+									v-model="formData.due"
+									:label="recur ? 'Due*' : 'Due'"
+									:rules="recur ? requiredRules : []"
+									:required="recur"
+									append-icon="mdi-calendar"
+									v-bind="attrs"
+									v-on:click:append="dueMenu = !dueMenu"
+									placeholder="e.g. tomorrow, 2026-10-31"
+								/>
+							</template>
+							<v-date-picker
+								no-title
+								@input="onDateSelected('due', $event)"
+							/>
+						</v-menu>
+
+						<v-menu
+							v-model="untilMenu"
+							:close-on-content-click="false"
+							transition="scale-transition"
+							offset-y
+							min-width="auto"
+						>
+							<template v-slot:activator="{ on, attrs }">
+								<v-text-field
+									v-model="formData.until"
+									label="Until"
+									append-icon="mdi-calendar"
+									v-bind="attrs"
+									v-on:click:append="untilMenu = !untilMenu"
+									placeholder="e.g. 2026-12-31"
+								/>
+							</template>
+							<v-date-picker
+								no-title
+								@input="onDateSelected('until', $event)"
+							/>
+						</v-menu>
 					</v-row>
 					<v-row class="px-3">
-						<v-text-field
-							class="mr-3"
-							v-model="formData.scheduled"
-							label="Scheduled"
-						/>
-						<v-text-field
-							v-model="formData.wait"
-							label="Wait"
-						/>
+						<v-menu
+							v-model="scheduledMenu"
+							:close-on-content-click="false"
+							transition="scale-transition"
+							offset-y
+							min-width="auto"
+						>
+							<template v-slot:activator="{ on, attrs }">
+								<v-text-field
+									class="mr-3"
+									v-model="formData.scheduled"
+									label="Scheduled"
+									append-icon="mdi-calendar"
+									v-bind="attrs"
+									v-on:click:append="scheduledMenu = !scheduledMenu"
+									placeholder="e.g. monday"
+								/>
+							</template>
+							<v-date-picker
+								no-title
+								@input="onDateSelected('scheduled', $event)"
+							/>
+						</v-menu>
+
+						<v-menu
+							v-model="waitMenu"
+							:close-on-content-click="false"
+							transition="scale-transition"
+							offset-y
+							min-width="auto"
+						>
+							<template v-slot:activator="{ on, attrs }">
+								<v-text-field
+									v-model="formData.wait"
+									label="Wait"
+									append-icon="mdi-calendar"
+									v-bind="attrs"
+									v-on:click:append="waitMenu = !waitMenu"
+									placeholder="e.g. eow"
+								/>
+							</template>
+							<v-date-picker
+								no-title
+								@input="onDateSelected('wait', $event)"
+							/>
+						</v-menu>
 					</v-row>
 					<v-row class="px-3">
 						<v-checkbox v-model="recur" class="mr-3" label="Recur" />
@@ -174,7 +249,7 @@
 <script lang="ts">
 import { defineComponent, useStore, watch, computed, ref } from '@nuxtjs/composition-api';
 import { Task } from 'taskwarrior-lib';
-import { accessorType  } from "../store";
+import { accessorType } from '../store';
 
 export default defineComponent({
 	props: {
@@ -182,6 +257,14 @@ export default defineComponent({
 		task: {
 			type: Object as () => Task,
 			required: false
+		},
+		initialProject: {
+			type: String,
+			default: ''
+		},
+		initialAssignee: {
+			type: String,
+			default: ''
 		}
 	},
 	setup(props, ctx) {
@@ -195,6 +278,20 @@ export default defineComponent({
 			get: () => props.value,
 			set: val => ctx.emit('input', val)
 		});
+
+		// Keydown handlers: Escape to close, Ctrl+Enter / Cmd+Enter to bulk add and continue
+		if (typeof window !== 'undefined') {
+			window.addEventListener('keydown', (e) => {
+				if (!showDialog.value) return;
+				if (e.key === 'Escape') {
+					closeDialog();
+				} else if ((e.ctrlKey || e.metaKey) && e.key === 'Enter') {
+					e.preventDefault();
+					e.stopPropagation();
+					saveAndContinue();
+				}
+			});
+		}
 
 		const requiredRules = [
 			(str: string) => Boolean(str) || 'Required'
@@ -260,11 +357,23 @@ export default defineComponent({
 			return dependents;
 		};
 
+		const getDefaultProject = () => {
+			if (props.task?.project) return props.task.project;
+			return props.initialProject || '';
+		};
+
+		const getDefaultAssignee = () => {
+			if ((props.task as any)?.assignee || (props.task as any)?.assignees) {
+				return (props.task as any).assignee || (props.task as any).assignees;
+			}
+			return props.initialAssignee || store.state.settings.assigneeName || '';
+		};
+
 		const recur = ref(Boolean(props.task?.recur));
 		const formData = ref({
 			description: '',
-			project: '',
-			assignee: (props.task as any)?.assignee || (props.task as any)?.assignees || '',
+			project: getDefaultProject(),
+			assignee: getDefaultAssignee(),
 			scheduled: '',
 			due: '',
 			until: '',
@@ -282,8 +391,8 @@ export default defineComponent({
 		const reset = () => {
 			formData.value = {
 				description: '',
-				project: '',
-				assignee: (props.task as any)?.assignee || (props.task as any)?.assignees || '',
+				project: getDefaultProject(),
+				assignee: getDefaultAssignee(),
 				scheduled: '',
 				due: '',
 				until: '',
@@ -302,14 +411,34 @@ export default defineComponent({
 				(formRef.value as any).resetValidation();
 			}
 
-			addAnnotationDescription.value = "";
+			addAnnotationDescription.value = '';
 		};
 
-		watch(() => props.task, () => {
-			reset();
+		watch([() => props.task, () => props.initialProject, () => props.initialAssignee, () => props.value], () => {
+			if (props.value && !props.task) {
+				reset();
+			} else if (props.task) {
+				reset();
+			}
 		});
 
 		const formRef = ref(null);
+		const descriptionInputRef = ref(null);
+
+		const dueMenu = ref(false);
+		const untilMenu = ref(false);
+		const scheduledMenu = ref(false);
+		const waitMenu = ref(false);
+
+		const onDateSelected = (field: 'due' | 'until' | 'scheduled' | 'wait', dateStr: string) => {
+			if (dateStr) {
+				formData.value[field] = dateStr;
+			}
+			if (field === 'due') dueMenu.value = false;
+			if (field === 'until') untilMenu.value = false;
+			if (field === 'scheduled') scheduledMenu.value = false;
+			if (field === 'wait') waitMenu.value = false;
+		};
 
 		const addAnnotation = () => {
 			formData.value.annotations.push({
@@ -317,7 +446,7 @@ export default defineComponent({
 				description: addAnnotationDescription.value
 			});
 
-			addAnnotationDescription.value = "";
+			addAnnotationDescription.value = '';
 		};
 
 		const closeDialog = () => {
@@ -358,7 +487,8 @@ export default defineComponent({
 								await (store as any).$axios.$post('/api/tasks/' + depUuid + '/modify', {
 									command: `depends:${currentUuid}`
 								});
-							} catch (e) {
+							}
+							catch (e) {
 								console.error(`Error adding dependency to task ${depUuid}`, e);
 							}
 						}
@@ -371,7 +501,8 @@ export default defineComponent({
 								await (store as any).$axios.$post('/api/tasks/' + depUuid + '/modify', {
 									command: `depends:-${currentUuid}`
 								});
-							} catch (e) {
+							}
+							catch (e) {
 								console.error(`Error removing dependency from task ${depUuid}`, e);
 							}
 						}
@@ -383,7 +514,8 @@ export default defineComponent({
 						await (store as any).$axios.$post('/api/tasks/' + props.task.uuid + '/modify', {
 							command: formData.value.customCommand
 						});
-					} catch (e) {
+					}
+					catch (e) {
 						console.error('Custom modifier command error', e);
 					}
 				}
@@ -395,6 +527,64 @@ export default defineComponent({
 					text: `Successfully ${props.task ? 'update' : 'create'} the task`
 				});
 				closeDialog();
+			}
+		};
+
+		const saveAndContinue = async () => {
+			const valid = (formRef.value as any).validate();
+			if (valid) {
+				const dependsUuids = (formData.value.depends || []).map(parseTaskRefToUuid).filter(Boolean);
+
+				const taskPayload = {
+					...formData.value,
+					depends: dependsUuids.length > 0 ? dependsUuids.join(',') : undefined,
+					annotations: formData.value.annotations || [],
+					project: formData.value.project || undefined,
+					scheduled: formData.value.scheduled || undefined,
+					due: formData.value.due || undefined,
+					until: formData.value.until || undefined,
+					wait: formData.value.wait || undefined,
+					priority: formData.value.priority === 'N' ? undefined : formData.value.priority,
+					recur: recur.value ? formData.value.recur : undefined
+				};
+				delete (taskPayload as any).dependents;
+
+				await store.dispatch('updateTasks', [taskPayload]);
+				await store.dispatch('fetchTasks');
+
+				store.commit('setNotification', {
+					color: 'success',
+					text: 'Task created. Ready for next task.'
+				});
+
+				// Retain Project and Assignee; reset all other fields
+				const retainedProject = formData.value.project;
+				const retainedAssignee = formData.value.assignee;
+
+				formData.value.description = '';
+				formData.value.project = retainedProject;
+				formData.value.assignee = retainedAssignee;
+				formData.value.scheduled = '';
+				formData.value.due = '';
+				formData.value.until = '';
+				formData.value.wait = '';
+				formData.value.tags = [];
+				formData.value.depends = [];
+				formData.value.dependents = [];
+				formData.value.annotations = [];
+				formData.value.priority = 'N';
+				formData.value.recur = '';
+				formData.value.customCommand = '';
+				recur.value = false;
+				addAnnotationDescription.value = '';
+
+				if (formRef.value) {
+					(formRef.value as any).resetValidation();
+				}
+
+				if (descriptionInputRef.value) {
+					(descriptionInputRef.value as any).focus();
+				}
 			}
 		};
 
@@ -431,6 +621,13 @@ export default defineComponent({
 			closeDialog,
 			reset,
 			submit,
+			saveAndContinue,
+			descriptionInputRef,
+			dueMenu,
+			untilMenu,
+			scheduledMenu,
+			waitMenu,
+			onDateSelected,
 			showDialog
 		};
 	}
