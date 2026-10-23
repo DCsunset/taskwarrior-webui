@@ -22,24 +22,69 @@
 			<div class="subtitle-2 text-wrap mb-1" v-html="linkify(task.description)" />
 
 			<div class="d-flex flex-wrap align-center mt-2">
-				<v-chip v-if="task.project" small color="primary" outlined class="mr-1 mb-1" style="font-size: 12px;">
+				<v-chip
+					v-if="task.project"
+					small
+					color="primary"
+					outlined
+					class="mr-1 mb-1"
+					style="font-size: 12px;"
+				>
 					<v-icon left small>mdi-folder-outline</v-icon>
 					{{ task.project }}
 				</v-chip>
-				<v-chip v-if="task.assignee || task.assignees" small color="teal" dark class="mr-1 mb-1" style="font-size: 12px;">
+				<v-chip
+					v-if="task.assignee || task.assignees"
+					small
+					color="teal"
+					dark
+					class="mr-1 mb-1"
+					style="font-size: 12px;"
+				>
 					<v-icon left small>mdi-account-outline</v-icon>
 					{{ task.assignee || task.assignees }}
 				</v-chip>
-				<v-chip v-for="tag in task.tags" :key="tag" small color="grey darken-1" dark class="mr-1 mb-1" style="font-size: 12px;">
+				<v-chip
+					v-for="tag in task.tags"
+					:key="tag"
+					small
+					color="grey darken-1"
+					dark
+					class="mr-1 mb-1"
+					style="font-size: 12px;"
+				>
 					+{{ tag }}
 				</v-chip>
-				<v-chip v-if="task.depends" small color="warning" dark class="mr-1 mb-1" :title="'Blocked by: ' + formatDepends(task.depends)" style="font-size: 12px;">
+				<v-chip
+					v-if="task.depends"
+					small
+					color="warning"
+					dark
+					class="mr-1 mb-1"
+					:title="'Blocked by: ' + formatDepends(task.depends)"
+					style="font-size: 12px;"
+				>
 					<v-icon left small>mdi-lock-outline</v-icon>BLOCKED ({{ formatDepends(task.depends) }})
 				</v-chip>
-				<v-chip v-if="getDependents(task)" small color="info" dark class="mr-1 mb-1" :title="'Blocking: ' + getDependents(task)" style="font-size: 12px;">
+				<v-chip
+					v-if="getDependents(task)"
+					small
+					color="info"
+					dark
+					class="mr-1 mb-1"
+					:title="'Blocking: ' + getDependents(task)"
+					style="font-size: 12px;"
+				>
 					<v-icon left small>mdi-account-arrow-right-outline</v-icon>BLOCKING ({{ getDependents(task) }})
 				</v-chip>
-				<v-chip v-if="task.recur" small color="info" dark class="mr-1 mb-1" style="font-size: 12px;">
+				<v-chip
+					v-if="task.recur"
+					small
+					color="info"
+					dark
+					class="mr-1 mb-1"
+					style="font-size: 12px;"
+				>
 					<v-icon left small>mdi-restart</v-icon>RECUR
 				</v-chip>
 			</div>
@@ -48,7 +93,14 @@
 		<v-divider />
 
 		<v-card-actions class="py-1 px-2">
-			<v-btn v-if="timewPresent" icon x-small :color="isActive ? 'warning' : 'success'" title="Start/Stop Timer" @click.stop="$emit('toggle-timer', task)">
+			<v-btn
+				v-if="timewPresent"
+				icon
+				x-small
+				:color="isActive ? 'warning' : 'success'"
+				title="Start/Stop Timer"
+				@click.stop="$emit('toggle-timer', task)"
+			>
 				<v-icon x-small>{{ isActive ? 'mdi-stop' : 'mdi-play' }}</v-icon>
 			</v-btn>
 			<v-btn icon x-small color="green" title="Complete Task" @click.stop="$emit('complete', task)">
@@ -68,32 +120,9 @@
 <script lang="ts">
 import { defineComponent, computed, ref, onMounted, onUnmounted, watch, useStore } from '@nuxtjs/composition-api';
 import { Task } from 'taskwarrior-lib';
-import { accessorType  } from "../store";
-import urlRegex from 'url-regex-safe';
-import normalizeUrl from 'normalize-url';
+import { accessorType } from '../store';
 import { getActiveElapsedSeconds, formatDuration } from '../utils/duration';
-
-function linkify(text: string) {
-	if (!text) return '';
-	const regex = urlRegex();
-	let match;
-	let lastIndex = 0;
-	let result = '';
-	while ((match = regex.exec(text)) !== null) {
-		const str = text.substring(lastIndex, match.index);
-		let href = match[0];
-		try {
-			href = normalizeUrl(match[0]);
-		} catch (e) {
-			// Fallback if normalizeUrl fails on pseudo-URL string
-		}
-		const url = `<a target="_blank" href="${href}">${match[0]}</a>`;
-		result = `${result}${str}${url}`;
-		lastIndex = match.index + match[0].length;
-	}
-	result += text.substring(lastIndex);
-	return result;
-}
+import { linkify } from '../utils/linkify';
 
 export default defineComponent({
 	name: 'KanbanCard',
@@ -121,7 +150,8 @@ export default defineComponent({
 		const updateElapsed = () => {
 			if (props.task.start) {
 				elapsedSeconds.value = getActiveElapsedSeconds(props.task.start);
-			} else {
+			}
+			else {
 				elapsedSeconds.value = 0;
 			}
 		};

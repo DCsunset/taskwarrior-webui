@@ -126,8 +126,19 @@ export default defineComponent({
 		const allModes = ['Tasks', 'Kanban'];
 
 		const selectedProject = ref((route.value.query.project as string) || '(All Projects)');
-		const projects = computed(() => store.getters.projects);
-		const projectOptions = computed(() => ['(All Projects)', '(No Project)', ...projects.value]);
+		const activeProjects = computed(() => store.getters.activeProjects as string[]);
+		const completedProjects = computed(() => store.getters.completedProjects as string[]);
+		const hideCompletedProjects = computed(() => store.state.settings.hideCompletedProjects);
+
+		const projectOptions = computed(() => {
+			const options: any[] = ['(All Projects)', '(No Project)', ...activeProjects.value];
+			if (!hideCompletedProjects.value && completedProjects.value.length > 0) {
+				options.push({ divider: true });
+				options.push({ header: 'Completed Projects' });
+				options.push(...completedProjects.value);
+			}
+			return options;
+		});
 
 		const selectedAssignee = ref((route.value.query.assignee as string) || '(All Assignees)');
 		const assignees = computed(() => store.getters.assignees);

@@ -26,6 +26,8 @@
 						v-model="formData.description"
 						label="Description*"
 						:rules="requiredRules"
+						hide-details="auto"
+						class="mb-3"
 						required
 					/>
 					<v-combobox
@@ -67,38 +69,43 @@
 						label="Tags"
 						hint="Press tab or enter to add new tags"
 					/>
-					<v-row class="px-3">
+					<v-row class="px-3 mb-2">
 						<v-text-field
 							class="mr-3"
 							v-model="formData.due"
 							:label="recur ? 'Due*' : 'Due'"
 							:rules="recur ? requiredRules : []"
+							hide-details="auto"
 							:required="recur"
 						/>
 						<v-text-field
 							v-model="formData.until"
 							label="Until"
+							hide-details="auto"
 						/>
 					</v-row>
-					<v-row class="px-3">
+					<v-row class="px-3 mb-2">
 						<v-text-field
 							class="mr-3"
 							v-model="formData.scheduled"
 							label="Scheduled"
+							hide-details="auto"
 						/>
 						<v-text-field
 							v-model="formData.wait"
 							label="Wait"
+							hide-details="auto"
 						/>
 					</v-row>
-					<v-row class="px-3">
-						<v-checkbox v-model="recur" class="mr-3" label="Recur" />
+					<v-row class="px-3 mb-2 align-center">
+						<v-checkbox v-model="recur" class="mr-3" label="Recur" hide-details />
 						<v-text-field
 							label="period*"
 							v-model="formData.recur"
 							:rules="recur ? requiredRules : []"
 							:required="recur"
 							:disabled="!recur"
+							hide-details="auto"
 						/>
 					</v-row>
 					<v-radio-group v-model="formData.priority" row hide-details class="align-center">
@@ -174,7 +181,7 @@
 <script lang="ts">
 import { defineComponent, useStore, watch, computed, ref } from '@nuxtjs/composition-api';
 import { Task } from 'taskwarrior-lib';
-import { accessorType  } from "../store";
+import { accessorType } from '../store';
 
 export default defineComponent({
 	props: {
@@ -195,6 +202,15 @@ export default defineComponent({
 			get: () => props.value,
 			set: val => ctx.emit('input', val)
 		});
+
+		// Close dialog on Escape key
+		if (typeof window !== 'undefined') {
+			window.addEventListener('keydown', (e) => {
+				if (e.key === 'Escape' && showDialog.value) {
+					closeDialog();
+				}
+			});
+		}
 
 		const requiredRules = [
 			(str: string) => Boolean(str) || 'Required'
@@ -302,7 +318,7 @@ export default defineComponent({
 				(formRef.value as any).resetValidation();
 			}
 
-			addAnnotationDescription.value = "";
+			addAnnotationDescription.value = '';
 		};
 
 		watch(() => props.task, () => {
@@ -317,7 +333,7 @@ export default defineComponent({
 				description: addAnnotationDescription.value
 			});
 
-			addAnnotationDescription.value = "";
+			addAnnotationDescription.value = '';
 		};
 
 		const closeDialog = () => {
@@ -358,7 +374,8 @@ export default defineComponent({
 								await (store as any).$axios.$post('/api/tasks/' + depUuid + '/modify', {
 									command: `depends:${currentUuid}`
 								});
-							} catch (e) {
+							}
+							catch (e) {
 								console.error(`Error adding dependency to task ${depUuid}`, e);
 							}
 						}
@@ -371,7 +388,8 @@ export default defineComponent({
 								await (store as any).$axios.$post('/api/tasks/' + depUuid + '/modify', {
 									command: `depends:-${currentUuid}`
 								});
-							} catch (e) {
+							}
+							catch (e) {
 								console.error(`Error removing dependency from task ${depUuid}`, e);
 							}
 						}
@@ -383,7 +401,8 @@ export default defineComponent({
 						await (store as any).$axios.$post('/api/tasks/' + props.task.uuid + '/modify', {
 							command: formData.value.customCommand
 						});
-					} catch (e) {
+					}
+					catch (e) {
 						console.error('Custom modifier command error', e);
 					}
 				}

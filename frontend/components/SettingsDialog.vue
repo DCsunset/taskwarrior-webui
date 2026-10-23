@@ -27,6 +27,20 @@
 					<v-list-item>
 						<v-list-item-content>
 							<v-list-item-title>
+								Hide Completed Projects
+							</v-list-item-title>
+							<v-list-item-subtitle>
+								hide 100% completed projects in selector
+							</v-list-item-subtitle>
+						</v-list-item-content>
+						<v-list-item-action>
+							<v-checkbox v-model="settings.hideCompletedProjects" />
+						</v-list-item-action>
+					</v-list-item>
+
+					<v-list-item>
+						<v-list-item-content>
+							<v-list-item-title>
 								Auto Refresh
 							</v-list-item-title>
 							<v-list-item-subtitle>
@@ -101,12 +115,12 @@
 </template>
 
 <script lang="ts">
-import { watch, defineComponent, useStore, computed, ref, reactive } from '@nuxtjs/composition-api';
-import { accessorType  } from "../store";
+import { defineComponent, useStore, computed, ref, reactive } from '@nuxtjs/composition-api';
+import { accessorType } from '../store';
 
 export default defineComponent({
 	props: {
-		value: Boolean,
+		value: Boolean
 	},
 
 	setup(props, ctx) {
@@ -124,6 +138,7 @@ export default defineComponent({
 		const formRef = ref(null);
 		const settings = reactive({
 			dark: store.state.settings.dark,
+			hideCompletedProjects: store.state.settings.hideCompletedProjects,
 			autoRefresh: store.state.settings.autoRefresh,
 			autoSync: store.state.settings.autoSync,
 			assigneeName: store.state.settings.assigneeName || ''
@@ -131,6 +146,7 @@ export default defineComponent({
 
 		const reset = () => {
 			settings.dark = store.state.settings.dark;
+			settings.hideCompletedProjects = store.state.settings.hideCompletedProjects;
 			settings.autoRefresh = store.state.settings.autoRefresh;
 			settings.autoSync = store.state.settings.autoSync;
 			settings.assigneeName = store.state.settings.assigneeName || '';
