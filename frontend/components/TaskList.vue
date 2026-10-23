@@ -6,7 +6,12 @@
 			:text="confirmation.text"
 			@yes="confirmation.handler"
 		/>
-		<TaskDialog v-model="showTaskDialog" :task="currentTask || undefined" />
+		<TaskDialog
+			v-model="showTaskDialog"
+			:task="currentTask || undefined"
+			:initial-project="activeFilterProject"
+			:initial-assignee="activeFilterAssignee"
+		/>
 		<ColumnDialog v-model="showColumnDialog" :active-columns="headers"/>
 		<v-row class="px-4 pt-4">
 			<v-btn-toggle v-model="selectedStatuses" multiple background-color="rgba(0, 0, 0, 0)">
@@ -40,6 +45,7 @@
 		<v-data-table
 			:items="displayedTasks"
 			:headers="filteredHeaders"
+			:options.sync="tableOptions"
 			show-select
 			item-key="uuid"
 			:item-class="rowClass"
@@ -372,6 +378,18 @@ export default defineComponent({
 			return parts;
 		};
 
+		const activeFilterProject = computed(() => {
+			const p = route.value.query.project as string;
+			if (p && p !== '(All Projects)' && p !== '(No Project)') return p;
+			return '';
+		});
+
+		const activeFilterAssignee = computed(() => {
+			const a = route.value.query.assignee as string;
+			if (a && a !== '(All Assignees)' && a !== '(Unassigned)') return a;
+			return '';
+		});
+
 		const selectedStatuses = ref<string[]>(parseStatusQuery(route.value.query.status));
 
 		const updateStatusQuery = (statuses: string[]) => {
@@ -393,6 +411,50 @@ export default defineComponent({
 				router.replace({ query }).catch(() => {});
 			}
 		};
+
+		const defaultTableOptions = {
+			page: 1,
+			itemsPerPage: 10,
+			sortBy: ['urgency'],
+			sortDesc: [false],
+			groupBy: [],
+			groupDesc: [],
+			multiSort: false,
+			mustSort: false
+		};
+
+		const loadSavedTableOptions = () => {
+			if (typeof window === 'undefined') return { ...defaultTableOptions };
+			try {
+				const saved = localStorage.getItem('taskListOptions');
+				if (saved) {
+					const parsed = JSON.parse(saved);
+					return {
+						...defaultTableOptions,
+						...parsed
+					};
+				}
+			} catch (e) {
+				// Ignore parse error and return default
+			}
+			return { ...defaultTableOptions };
+		};
+
+		const tableOptions = ref(loadSavedTableOptions());
+
+		watch(tableOptions, (newOptions) => {
+			if (typeof window !== 'undefined' && newOptions) {
+				try {
+					localStorage.setItem('taskListOptions', JSON.stringify({
+						itemsPerPage: newOptions.itemsPerPage,
+						sortBy: newOptions.sortBy,
+						sortDesc: newOptions.sortDesc
+					}));
+				} catch (e) {
+					// Ignore storage errors
+				}
+			}
+		}, { deep: true });
 
 		const headers = computed(() => [
 			{ text: 'ID', value: 'id' },
@@ -662,6 +724,9 @@ export default defineComponent({
 
 		return {
 			activeTaskUuid,
+			activeFilterProject,
+			activeFilterAssignee,
+			tableOptions,
 			toggleTimer,
 			getTaskId,
 			getShortUuid,
