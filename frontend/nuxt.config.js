@@ -1,6 +1,14 @@
+const rawBasePath = process.env.ROUTER_BASE_PATH || '/';
+const basePath = rawBasePath.startsWith('/') ? (rawBasePath.endsWith('/') ? rawBasePath : `${rawBasePath}/`) : `/${rawBasePath}/`;
+const normalizedBase = basePath === '//' ? '/' : basePath;
+
 export default {
 	server: {
 		port: 8080
+	},
+
+	router: {
+		base: normalizedBase
 	},
 
 	/*
@@ -45,6 +53,7 @@ export default {
   ** https://nuxtjs.org/guide/plugins
   */
 	plugins: [
+		{ src: '~/plugins/axios.ts' },
 		{ src: '~/plugins/hotkeys.ts', mode: 'client' }
 	],
 	/*
@@ -82,20 +91,37 @@ export default {
 
 	proxy: {
 		// Backend
-		'/api': {
-			target: 'http://localhost:3000/',
-			changeOrigin: true,
-			pathRewrite: {
-				'/api': ''
+		...(normalizedBase === '/' ? {
+			'/api': {
+				target: 'http://localhost:3000/',
+				changeOrigin: true,
+				pathRewrite: {
+					'/api': ''
+				}
 			}
-		}
+		} : {
+			[`${normalizedBase}api`]: {
+				target: 'http://localhost:3000/',
+				changeOrigin: true,
+				pathRewrite: {
+					[`^${normalizedBase}api`]: ''
+				}
+			},
+			'/api': {
+				target: 'http://localhost:3000/',
+				changeOrigin: true,
+				pathRewrite: {
+					'/api': ''
+				}
+			}
+		})
 	},
 	/*
   ** Axios module configuration
   ** See https://axios.nuxtjs.org/options
   */
 	axios: {
-		baseURL: '/'
+		baseURL: normalizedBase
 	},
 	/*
   ** vuetify module configuration

@@ -1,8 +1,5 @@
-import { TaskwarriorLib } from 'taskwarrior-lib';
+import { getTaskwarrior } from './profiles';
 
-const taskRc = process.env.TASKRC;
-const taskData = process.env.TASKDATA;
-
-const taskwarrior = new TaskwarriorLib(taskRc, taskData);
+const taskwarrior = getTaskwarrior();
 
 export default taskwarrior;
