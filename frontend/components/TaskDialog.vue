@@ -174,7 +174,7 @@
 <script lang="ts">
 import { defineComponent, useStore, watch, computed, ref } from '@nuxtjs/composition-api';
 import { Task } from 'taskwarrior-lib';
-import { accessorType  } from "../store";
+import { accessorType } from '../store';
 
 export default defineComponent({
 	props: {
@@ -195,6 +195,15 @@ export default defineComponent({
 			get: () => props.value,
 			set: val => ctx.emit('input', val)
 		});
+
+		// Close dialog on Escape key
+		if (typeof window !== 'undefined') {
+			window.addEventListener('keydown', (e) => {
+				if (e.key === 'Escape' && showDialog.value) {
+					closeDialog();
+				}
+			});
+		}
 
 		const requiredRules = [
 			(str: string) => Boolean(str) || 'Required'
@@ -302,7 +311,7 @@ export default defineComponent({
 				(formRef.value as any).resetValidation();
 			}
 
-			addAnnotationDescription.value = "";
+			addAnnotationDescription.value = '';
 		};
 
 		watch(() => props.task, () => {
@@ -317,7 +326,7 @@ export default defineComponent({
 				description: addAnnotationDescription.value
 			});
 
-			addAnnotationDescription.value = "";
+			addAnnotationDescription.value = '';
 		};
 
 		const closeDialog = () => {
@@ -358,7 +367,8 @@ export default defineComponent({
 								await (store as any).$axios.$post('/api/tasks/' + depUuid + '/modify', {
 									command: `depends:${currentUuid}`
 								});
-							} catch (e) {
+							}
+							catch (e) {
 								console.error(`Error adding dependency to task ${depUuid}`, e);
 							}
 						}
@@ -371,7 +381,8 @@ export default defineComponent({
 								await (store as any).$axios.$post('/api/tasks/' + depUuid + '/modify', {
 									command: `depends:-${currentUuid}`
 								});
-							} catch (e) {
+							}
+							catch (e) {
 								console.error(`Error removing dependency from task ${depUuid}`, e);
 							}
 						}
@@ -383,7 +394,8 @@ export default defineComponent({
 						await (store as any).$axios.$post('/api/tasks/' + props.task.uuid + '/modify', {
 							command: formData.value.customCommand
 						});
-					} catch (e) {
+					}
+					catch (e) {
 						console.error('Custom modifier command error', e);
 					}
 				}

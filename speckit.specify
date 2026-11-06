@@ -29,15 +29,17 @@ Core Features:
    - Status isolation and URL preservation: The `?status=` query parameter has no filtering effect in the Kanban view (which displays tasks across all lifecycle stages: To Do, In Progress, Waiting, Done), but is never erased or overwritten during view mode transitions, preserving the user's status filter state when returning to the Tasks view.
 11. Gantt / Timeline Sequencing & Calendarless Flow View:
    - Horizontal sequencing: uses start date; falls back to due date; falls back to latest precedent task completion/end; falls back to today. Task length spans start through due date inclusive (or 1 day minimum).
-   - Vertical task ordering: Priority (H > M > L > none), Urgency, dependent task count, alphabetical description.
+   - Vertical task ordering: Status (non-deleted first, deleted tasks placed last), Priority (H > M > L > none), Urgency, dependent task count, alphabetical description.
    - Non-overlapping orthogonal dependency arrow routing avoiding task card intersections and vertical line collisions.
    - Multi-scale timeframes (Day, Week, Month) with fluid column spacing, horizontal scrolling, and removal of unpopulated empty intervals.
    - "Calendarless" (Topology / Flow) view displaying topological sequence starting from column 0 without date columns.
+   - Global search integration: leverages the unified top-bar filter-as-you-type search input, filtering tasks across Gantt and all other views with debounced `?search=` URL query sync.
+   - Reused status multi-toggles: replaces legacy mutually exclusive status filters with the multi-toggle status button group from TaskList (`pending`, `waiting`, `completed`, `deleted`, `recurring`), syncing bidirectionally with `?status=...` query parameter while maintaining prerequisite resolution across all task statuses.
 
 ## User Stories
 - As a Taskwarrior user, I want a modern web interface that combines full keyboard shortcuts, active task timer tracking, undo previews, and custom query reports from webui1 with a responsive Vuetify UI.
 - As a Taskwarrior user, I want a Kanban board view inspired by twkb so I can visually organize, drag-and-drop, and track tasks across To Do, In Progress, Waiting, and Done columns.
-- As a Taskwarrior user, I want a global search box that filters tasks as I type across both list and board views, and syncs to the URL query string (`?search=...`) so search states can be bookmarked and shared.
-- As a Taskwarrior user, I want the status filters in the Tasks list view to be independent toggles (e.g. view pending and waiting tasks simultaneously), persisted in the URL query string (`?status=...`).
+- As a Taskwarrior user, I want a global search box that filters tasks as I type across list, board, and Gantt timeline views, and syncs to the URL query string (`?search=...`) so search states can be bookmarked and shared.
+- As a Taskwarrior user, I want the status filters in the Tasks list view and Gantt timeline view to be independent toggles (e.g. view pending and waiting tasks simultaneously), persisted in the URL query string (`?status=...`).
 - As a Taskwarrior user, I want a Gantt and Calendarless flow timeline with deterministic task sequencing, priority/urgency vertical sorting, clean non-overlapping dependency arrows, and fluid horizontal scrolling.
 - As a developer, I want all these features cleanly integrated into the Koa backend and Vue.js frontend of pplupo/taskwarrior-webui.
